@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="600px" height="400px" viewBox="0 0 600 400" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Hero Image</title>
+    <defs>
+        <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#63A4FF" offset="0%"></stop>
+            <stop stop-color="#004BA0" offset="100%"></stop>
+        </linearGradient>
+        <circle id="path-2" cx="300" cy="200" r="150"></circle>
+        <filter x="-11.7%" y="-11.7%" width="123.3%" height="123.3%" filterUnits="objectBoundingBox" id="filter-3">
+            <feGaussianBlur stdDeviation="15" in="SourceGraphic"></feGaussianBlur>
+        </filter>
+    </defs>
+    <g id="Hero-Image" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle id="Background-Blur" fill="url(#linearGradient-1)" filter="url(#filter-3)" cx="300" cy="200" r="150"></circle>
+        <g id="People-Icons" transform="translate(150.000000, 100.000000)" fill="#FFFFFF">
+            <!-- Simplified people icons -->
+            <circle cx="50" cy="40" r="20"></circle>
+            <rect x="30" y="70" width="40" height="60" rx="10"></rect>
+            
+            <circle cx="130" cy="50" r="20"></circle>
+            <rect x="110" y="80" width="40" height="60" rx="10"></rect>
+            
+            <circle cx="210" cy="40" r="20"></circle>
+            <rect x="190" y="70" width="40" height="60" rx="10"></rect>
+            
+            <circle cx="290" cy="50" r="20"></circle>
+            <rect x="270" y="80" width="40" height="60" rx="10"></rect>
+            
+            <!-- Tool icons -->
+            <path d="M70,150 L90,150 L90,180 L70,180 Z" opacity="0.8"></path>
+            <path d="M150,160 L170,160 L170,190 L150,190 Z" opacity="0.8"></path>
+            <path d="M230,150 L250,150 L250,180 L230,180 Z" opacity="0.8"></path>
+            
+            <!-- Connection lines -->
+            <path d="M70,130 L150,150" stroke="#FFFFFF" stroke-width="2" opacity="0.6"></path>
+            <path d="M150,150 L230,130" stroke="#FFFFFF" stroke-width="2" opacity="0.6"></path>
+            <path d="M230,130 L290,150" stroke="#FFFFFF" stroke-width="2" opacity="0.6"></path>
+        </g>
+        <text font-family="Arial-BoldMT, Arial" font-size="24" font-weight="bold" fill="#FFFFFF">
+            <tspan x="240" y="300">DE CONFIANZA</tspan>
+        </text>
+    </g>
+</svg>

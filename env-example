@@ -1,0 +1,49 @@
+# Variables de entorno para DeConfianza
+# Este archivo sirve como plantilla. Copia este archivo como .env
+# según el entorno que quieras configurar.
+
+# Configuración general
+ENVIRONMENT=dev                            # dev, test, prod
+PROJECT_NAME=deconfianza
+
+# Configuración de Django
+DJANGO_SECRET_KEY=change-this-to-a-real-secret-key
+DJANGO_DEBUG=True                          # True, False
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Configuración de la base de datos PostgreSQL
+POSTGRES_DB=deconfianza
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_HOST=db                           # db-dev, db-test, db-prod según el entorno
+POSTGRES_PORT=5432
+
+# Configuración de puertos
+BACKEND_PORT=8000
+FRONTEND_PORT=5173
+DB_PORT=5432
+
+# Configuración de URLs
+BACKEND_URL=http://localhost:8000
+FRONTEND_URL=http://localhost:5173
+API_URL=http://localhost:8000/api
+
+# Configuración de CORS
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+
+# Configuración de Email
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=user@example.com
+EMAIL_HOST_PASSWORD=your-email-password
+
+# Configuración de Nginx Proxy Manager
+NPM_ADMIN_EMAIL=admin@example.com
+NPM_ADMIN_PASSWORD=changeme
+
+# Configuración de SSL/TLS (para producción)
+SSL_ENABLED=False
+
+# Feature flags
+LANDING_ONLY_MODE=false

@@ -1,0 +1,20 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+# Variables de entorno para testing
+ENV VITE_API_URL=https://test.deconfianza.com.ar/api
+ENV VITE_NODE_ENV=test
+ARG LANDING_ONLY_MODE=true
+ENV VITE_LANDING_ONLY_MODE=$LANDING_ONLY_MODE
+
+# Puerto para testing
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

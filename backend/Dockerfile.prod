@@ -1,0 +1,28 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc python3-dev libpq-dev \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt gunicorn==21.2.0
+
+COPY . /app/
+
+# Entorno de producción específico
+ENV DEBUG=False
+ENV DJANGO_SETTINGS_MODULE=deconfianza.settings.prod
+
+# Configuración para archivos estáticos
+RUN python manage.py collectstatic --noinput
+
+# Puerto para producción
+EXPOSE 8000
+
+CMD ["gunicorn", "deconfianza.wsgi:application", "--bind", "0.0.0.0:8000"]
