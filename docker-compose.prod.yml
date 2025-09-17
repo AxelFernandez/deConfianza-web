@@ -55,7 +55,7 @@ services:
     volumes:
       - ./frontend/dist:/usr/share/nginx/html
     ports:
-      - "${FRONTEND_PORT}:80"
+      - "${FRONTEND_PORT:-8080}:80"
     depends_on:
       - backend-prod
     networks:
