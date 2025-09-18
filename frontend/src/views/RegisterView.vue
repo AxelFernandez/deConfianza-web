@@ -10,15 +10,14 @@
               <ul class="nav nav-pills mb-4" id="registerTab" role="tablist">
                 <li class="nav-item flex-fill text-center" role="presentation">
                   <button 
-                    class="nav-link w-100 active" 
+                    class="nav-link w-100" 
                     id="client-tab" 
-                    data-bs-toggle="pill" 
-                    data-bs-target="#client" 
                     type="button" 
                     role="tab" 
                     aria-controls="client" 
                     aria-selected="true"
                     @click="userType = 'cliente'"
+                    :class="{ active: userType === 'cliente' }"
                   >
                     <font-awesome-icon :icon="['fas', 'user']" class="me-2" />
                     Cliente
@@ -28,13 +27,12 @@
                   <button 
                     class="nav-link w-100" 
                     id="provider-tab" 
-                    data-bs-toggle="pill" 
-                    data-bs-target="#provider" 
                     type="button" 
                     role="tab" 
                     aria-controls="provider" 
                     aria-selected="false"
                     @click="userType = 'prestador'"
+                    :class="{ active: userType === 'prestador' }"
                   >
                     <font-awesome-icon :icon="['fas', 'briefcase']" class="me-2" />
                     Prestador de servicios
@@ -43,7 +41,7 @@
               </ul>
               
               <div class="tab-content" id="registerTabContent">
-                <div class="tab-pane fade show active" id="client" role="tabpanel" aria-labelledby="client-tab">
+                <div v-if="userType === 'cliente'" id="client" role="tabpanel" aria-labelledby="client-tab">
                   <form @submit.prevent="register">
                     <div class="row">
                       <div class="col-md-6 mb-3">
@@ -88,7 +86,7 @@
                   </form>
                 </div>
                 
-                <div class="tab-pane fade" id="provider" role="tabpanel" aria-labelledby="provider-tab">
+                <div v-else id="provider" role="tabpanel" aria-labelledby="provider-tab">
                   <form @submit.prevent="registerProvider">
                     <div class="row">
                       <div class="col-md-6 mb-3">
@@ -187,7 +185,6 @@
 
 <script setup>
 import { ref } from 'vue';
-import * as bootstrap from 'bootstrap';
 
 // Cliente y prestador comparten algunos campos
 const firstName = ref('');
