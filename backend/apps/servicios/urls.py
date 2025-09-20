@@ -7,7 +7,8 @@ from .views import (
     RangoSuscripcionViewSet, 
     PrestadorViewSet, 
     MediaPrestadorViewSet, 
-    ResenaViewSet
+    ResenaViewSet,
+    ServicioPrestadorViewSet
 )
 
 router = DefaultRouter()
@@ -18,6 +19,7 @@ router.register('rangos', RangoSuscripcionViewSet)
 router.register('prestadores', PrestadorViewSet)
 router.register('media', MediaPrestadorViewSet)
 router.register('resenas', ResenaViewSet)
+router.register('mis-servicios', ServicioPrestadorViewSet, basename='servicio-prestador')
 
 urlpatterns = [
     path('', include(router.urls)),

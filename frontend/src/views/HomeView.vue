@@ -44,52 +44,105 @@
       </div>
     </section>
 
-    <!-- SECTORES destacados con scroll -->
-    <section v-if="!isLandingOnlyMode" class="py-10">
+    <!-- BUSCAR POR: Oficios o Profesión -->
+    <section v-if="!isLandingOnlyMode" class="section-padding bg-white">
       <div class="container-custom">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold text-neutral-800">Sectores destacados</h2>
-          <span class="text-sm text-neutral-500">Desliza para ver más</span>
-        </div>
-        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2">
-          <button class="snap-start shrink-0 px-4 py-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium">Electricistas</button>
-          <button class="snap-start shrink-0 px-4 py-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium">Plomeros</button>
-          <button class="snap-start shrink-0 px-4 py-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium">Carpinteros</button>
-          <button class="snap-start shrink-0 px-4 py-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium">Jardinería</button>
-          <button class="snap-start shrink-0 px-4 py-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium">Abogados</button>
-          <button class="snap-start shrink-0 px-4 py-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium">Contadores</button>
-          <button class="snap-start shrink-0 px-4 py-2 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium">Psicología</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TESTIMONIOS apilados -->
-    <section v-if="!isLandingOnlyMode" class="section-padding bg-neutral-50">
-      <div class="container-custom">
-        <div class="mb-12">
-          <h2 class="text-3xl font-display font-bold text-neutral-900">Lo que dicen de nosotros</h2>
-          <p class="text-neutral-600 mt-2">Historias reales, confianza real.</p>
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-display font-bold text-neutral-900 mb-3">
+            Explora por categoría
+          </h2>
+          <p class="text-neutral-600">Elegí cómo querés buscar: por oficios o por profesión.</p>
         </div>
 
-        <div class="relative">
-          <div class="grid md:grid-cols-3 gap-6">
-            <div class="card rotate-[-1.5deg] translate-y-1">
-              <p class="text-neutral-700">“Encontré un electricista en minutos y pude ver reseñas verificadas. Todo salió perfecto.”</p>
-              <div class="mt-4 text-sm text-neutral-500">Lucía, Godoy Cruz</div>
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Oficios -->
+          <div class="card card-hover group">
+            <div class="text-center">
+              <div class="w-20 h-20 bg-gradient-to-br from-primary-100 to-primary-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
+                <svg class="w-10 h-10 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 8.172V5L8 4z" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-neutral-900 mb-3">Oficios</h3>
+              <p class="text-neutral-600 mb-6">Plomería, electricidad, carpintería, jardinería y más.</p>
+              <router-link to="/buscar?categoria=oficios" class="btn-outline w-full">Ver oficios</router-link>
             </div>
-            <div class="card rotate-[1.2deg] -translate-y-1">
-              <p class="text-neutral-700">“Como prestador, recibo consultas claras y reseñas que suman a mi reputación.”</p>
-              <div class="mt-4 text-sm text-neutral-500">Julián, Guaymallén</div>
-            </div>
-            <div class="card rotate-[-0.8deg]">
-              <p class="text-neutral-700">“Me gustó que sea simple, sin vueltas y con foco en la confianza.”</p>
-              <div class="mt-4 text-sm text-neutral-500">Paula, Ciudad</div>
+          </div>
+
+          <!-- Profesionales -->
+          <div class="card card-hover group">
+            <div class="text-center">
+              <div class="w-20 h-20 bg-gradient-to-br from-accent-100 to-accent-200 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-200">
+                <svg class="w-10 h-10 text-accent-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                </svg>
+              </div>
+              <h3 class="text-xl font-semibold text-neutral-900 mb-3">Profesionales</h3>
+              <p class="text-neutral-600 mb-6">Abogacía, contabilidad, medicina, psicología y más.</p>
+              <router-link to="/buscar?categoria=profesionales" class="btn-outline w-full">Ver profesionales</router-link>
             </div>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- ¿Cómo funciona? Pasos -->
+    <section v-if="!isLandingOnlyMode" class="section-padding bg-neutral-50">
+      <div class="container-custom">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-display font-bold text-neutral-900 mb-3">¿Cómo funciona?</h2>
+          <p class="text-neutral-600">En tres pasos, resolvés lo que necesitás.</p>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="text-center group">
+            <div class="w-16 h-16 bg-primary-500 text-white rounded-full grid place-items-center mx-auto mb-6 font-bold text-xl group-hover:scale-110 transition-transform">1</div>
+            <div class="card">
+              <h3 class="text-xl font-semibold mb-2">Busca</h3>
+              <p class="text-neutral-600">Filtrá por ubicación, categoría y especialidad para encontrar el servicio ideal.</p>
+            </div>
+          </div>
+          <div class="text-center group">
+            <div class="w-16 h-16 bg-accent-500 text-white rounded-full grid place-items-center mx-auto mb-6 font-bold text-xl group-hover:scale-110 transition-transform">2</div>
+            <div class="card">
+              <h3 class="text-xl font-semibold mb-2">Compara</h3>
+              <p class="text-neutral-600">Leé reseñas verificadas y mirá calificaciones para decidir con confianza.</p>
+            </div>
+          </div>
+          <div class="text-center group">
+            <div class="w-16 h-16 bg-primary-600 text-white rounded-full grid place-items-center mx-auto mb-6 font-bold text-xl group-hover:scale-110 transition-transform">3</div>
+            <div class="card">
+              <h3 class="text-xl font-semibold mb-2">Contacta</h3>
+              <p class="text-neutral-600">Conectá directo con el prestador y coordiná el servicio sin intermediarios.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Únete a la plataforma -->
+    <section v-if="!isLandingOnlyMode" class="section-padding bg-white">
+      <div class="container-custom">
+        <div class="grid lg:grid-cols-2 gap-10 items-center">
+          <div>
+            <h2 class="text-3xl md:text-4xl font-display font-bold text-neutral-900 mb-4">¿Ofrecés servicios? ¡Unite ahora!</h2>
+            <p class="text-neutral-600 mb-6">Potenciá tu presencia con un perfil verificado, reseñas reales y herramientas para crecer.</p>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-start gap-3"><span class="mt-1 w-5 h-5 rounded-full bg-primary-100 grid place-items-center text-primary-600">✓</span><span>Mayor visibilidad en búsquedas</span></li>
+              <li class="flex items-start gap-3"><span class="mt-1 w-5 h-5 rounded-full bg-primary-100 grid place-items-center text-primary-600">✓</span><span>Clientes con intención real</span></li>
+              <li class="flex items-start gap-3"><span class="mt-1 w-5 h-5 rounded-full bg-primary-100 grid place-items-center text-primary-600">✓</span><span>Gestión simple de tu reputación</span></li>
+            </ul>
+            <router-link to="/registrar" class="btn-secondary">Crear mi perfil</router-link>
+          </div>
+          <div class="text-center">
+            <div class="relative inline-block">
+              <div class="absolute inset-0 bg-gradient-to-br from-accent-200 to-primary-200 rounded-3xl transform -rotate-6 opacity-20"></div>
+              <img src="../assets/join-us-image.svg" alt="Únete a DE CONFIANZA" class="relative w-full max-w-md mx-auto lg:max-w-lg" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     <!-- CTA FINAL / LANDING ONLY -->
     <section class="section-padding">
       <div class="container-custom">

@@ -1,93 +1,114 @@
 <template>
-  <div class="login-view py-5">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-          <div class="card shadow">
-            <div class="card-body p-4 p-md-5">
-              <h1 class="h3 text-center mb-4">Iniciar sesión</h1>
+  <div class="min-h-[calc(100vh-200px)] flex items-center py-10">
+    <div class="container-custom">
+      <div class="flex justify-center">
+        <div class="w-full max-w-md">
+          <div class="bg-white rounded-2xl shadow-lg border border-neutral-100">
+            <div class="p-6 md:p-8">
+              <h1 class="text-2xl font-display font-bold text-center mb-6">Iniciar sesión</h1>
               
-              <form @submit.prevent="login">
-                <div class="mb-3">
-                  <label for="email" class="form-label">Correo electrónico</label>
-                  <div class="input-group">
-                    <span class="input-group-text">
+              <form @submit.prevent="login" class="space-y-5">
+                <!-- Mensaje de error -->
+                <div v-if="errorMessage" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded">
+                  <p>{{ errorMessage }}</p>
+                </div>
+
+                <div>
+                  <label for="email" class="block text-sm font-medium text-neutral-700 mb-1">Correo electrónico</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-neutral-500">
                       <font-awesome-icon :icon="['fas', 'envelope']" />
-                    </span>
+                    </div>
                     <input 
                       type="email" 
-                      class="form-control" 
+                      class="w-full pl-10 pr-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors" 
                       id="email" 
                       v-model="email" 
                       required
                       placeholder="correo@ejemplo.com"
+                      :disabled="authStore.loading"
                     >
                   </div>
                 </div>
                 
-                <div class="mb-4">
-                  <label for="password" class="form-label">Contraseña</label>
-                  <div class="input-group">
-                    <span class="input-group-text">
+                <div>
+                  <label for="password" class="block text-sm font-medium text-neutral-700 mb-1">Contraseña</label>
+                  <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-neutral-500">
                       <font-awesome-icon :icon="['fas', 'lock']" />
-                    </span>
+                    </div>
                     <input 
                       :type="showPassword ? 'text' : 'password'" 
-                      class="form-control" 
+                      class="w-full pl-10 pr-10 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors" 
                       id="password" 
                       v-model="password" 
                       required
                       placeholder="Contraseña"
+                      :disabled="authStore.loading"
                     >
                     <button 
-                      class="btn btn-outline-secondary" 
+                      class="absolute inset-y-0 right-0 flex items-center px-3 text-neutral-500 hover:text-neutral-700" 
                       type="button"
                       @click="showPassword = !showPassword"
+                      :disabled="authStore.loading"
                     >
                       <font-awesome-icon :icon="showPassword ? ['fas', 'eye-slash'] : ['fas', 'eye']" />
                     </button>
                   </div>
                 </div>
                 
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="remember" v-model="remember">
-                    <label class="form-check-label" for="remember">
+                <div class="flex justify-between items-center">
+                  <div class="flex items-center">
+                    <input 
+                      class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-neutral-300 rounded" 
+                      type="checkbox" 
+                      id="remember" 
+                      v-model="remember"
+                      :disabled="authStore.loading"
+                    >
+                    <label class="ml-2 block text-sm text-neutral-700" for="remember">
                       Recordarme
                     </label>
                   </div>
-                  <a href="#" class="text-primary">¿Olvidaste tu contraseña?</a>
+                  <a href="#" class="text-sm text-primary-600 hover:text-primary-800">¿Olvidaste tu contraseña?</a>
                 </div>
                 
-                <div class="d-grid">
-                  <button type="submit" class="btn btn-primary">
-                    <font-awesome-icon :icon="['fas', 'sign-in-alt']" class="me-2" />
-                    Iniciar sesión
+                <div>
+                  <button 
+                    type="submit" 
+                    class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
+                    :disabled="authStore.loading"
+                  >
+                    <span v-if="authStore.loading" class="mr-2">
+                      <font-awesome-icon :icon="['fas', 'spinner']" class="animate-spin" />
+                    </span>
+                    <font-awesome-icon v-else :icon="['fas', 'sign-in-alt']" class="mr-2" />
+                    {{ authStore.loading ? 'Iniciando sesión...' : 'Iniciar sesión' }}
                   </button>
                 </div>
               </form>
               
-              <div class="mt-4 text-center">
-                <p class="mb-0">¿No tienes una cuenta? <router-link to="/registrar" class="text-primary">Regístrate</router-link></p>
+              <div class="mt-6 text-center">
+                <p class="text-sm text-neutral-600">¿No tienes una cuenta? <router-link to="/registrar" class="text-primary-600 hover:text-primary-800 font-medium">Regístrate</router-link></p>
               </div>
               
-              <div class="separator text-center my-4">
-                <span>O inicia sesión con</span>
+              <div class="relative flex items-center justify-center my-6">
+                <div class="absolute inset-0 flex items-center">
+                  <div class="w-full border-t border-neutral-300"></div>
+                </div>
+                <div class="relative bg-white px-4 text-sm text-neutral-500">O inicia sesión con</div>
               </div>
               
-              <div class="row g-2">
-                <div class="col">
-                  <button class="btn btn-outline-secondary w-100">
-                    <font-awesome-icon :icon="['fab', 'google']" class="me-2" />
-                    Google
-                  </button>
-                </div>
-                <div class="col">
-                  <button class="btn btn-outline-secondary w-100">
-                    <font-awesome-icon :icon="['fab', 'facebook']" class="me-2" />
-                    Facebook
-                  </button>
-                </div>
+              <div class="grid grid-cols-1 gap-3">
+                <button 
+                  type="button"
+                  @click="loginWithGoogle"
+                  class="flex items-center justify-center py-2 px-4 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
+                  :disabled="authStore.loading"
+                >
+                  <font-awesome-icon :icon="['fab', 'google']" class="mr-2 text-red-500" />
+                  <span class="text-sm font-medium">Continuar con Google</span>
+                </button>
               </div>
             </div>
           </div>
@@ -98,52 +119,78 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, getCurrentInstance } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../stores/authStore';
+
+const router = useRouter();
+const authStore = useAuthStore();
+const app = getCurrentInstance();
 
 const email = ref('');
 const password = ref('');
 const remember = ref(false);
 const showPassword = ref(false);
+const errorMessage = ref('');
 
-const login = () => {
-  // Aquí iría la lógica de inicio de sesión
-  console.log('Iniciando sesión con:', email.value, password.value);
-};
+async function login() {
+  if (!email.value || !password.value) {
+    errorMessage.value = 'Por favor ingresa tu correo y contraseña';
+    return;
+  }
+  
+  errorMessage.value = '';
+  
+  const credentials = {
+    username: email.value, // El backend espera username para el login
+    email: email.value,
+    password: password.value
+  };
+  
+  const success = await authStore.login(credentials);
+  
+  if (success) {
+    // Dejar que el router maneje las redirecciones basado en onboarding_completed
+    const redirectTo = router.currentRoute.value.query.redirect || '/';
+    router.push(redirectTo);
+  } else {
+    // Si hubo error, mostrar mensaje
+    errorMessage.value = authStore.error || 'Error al iniciar sesión';
+  }
+}
+
+async function loginWithGoogle() {
+  try {
+    // Usar la API expuesta por el plugin para obtener el credential (ID token)
+    const googleAuth = app?.appContext?.config?.globalProperties?.$googleAuth;
+    if (!googleAuth || !googleAuth.getIdCredential) {
+      errorMessage.value = 'Error al inicializar Google Auth';
+      return;
+    }
+    // Pedir credential
+    const resp = await googleAuth.getIdCredential();
+    const credential = resp?.credential;
+    if (!credential) {
+      errorMessage.value = 'No se obtuvo respuesta de Google';
+      return;
+    }
+    // Enviar credential al backend para intercambiarlo por JWT
+    const ok = await authStore.loginWithGoogle(credential);
+    
+    if (ok) {
+      // Dejar que el router maneje las redirecciones
+      const redirectTo = router.currentRoute.value.query.redirect || '/';
+      router.push(redirectTo);
+    } else {
+      errorMessage.value = authStore.error || 'Error al iniciar sesión con Google';
+    }
+  } catch (error) {
+    console.error('Error en login con Google:', error);
+    errorMessage.value = 'Error al iniciar sesión con Google';
+  }
+}
 </script>
 
 <style scoped>
-.login-view {
-  min-height: calc(100vh - 200px);
-  display: flex;
-  align-items: center;
-}
-
-.separator {
-  position: relative;
-}
-
-.separator::before,
-.separator::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 35%;
-  height: 1px;
-  background-color: var(--gray-300);
-}
-
-.separator::before {
-  left: 0;
-}
-
-.separator::after {
-  right: 0;
-}
-
-.separator span {
-  background-color: white;
-  padding: 0 10px;
-  color: var(--gray-600);
-  font-size: 0.9rem;
-}
+/* Todos los estilos ahora están en las clases de Tailwind */
 </style>

@@ -21,18 +21,25 @@ services:
     volumes:
       - ./backend:/app
     ports:
-      - "${BACKEND_PORT:-8001}:8000"
+      - "${BACKEND_PORT:-8000}:8000"
     depends_on:
       - db-dev
     environment:
       - DJANGO_DEBUG=${DJANGO_DEBUG}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - POSTGRES_DB=${POSTGRES_DB:-deconfianza_dev}
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
       - POSTGRES_HOST=${POSTGRES_HOST:-db-dev}
       - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+      - MERCADOPAGO_ACCESS_TOKEN=${MERCADOPAGO_ACCESS_TOKEN}
+      - MERCADOPAGO_PUBLIC_KEY=${MERCADOPAGO_PUBLIC_KEY}
+      - MERCADOPAGO_SANDBOX=${MERCADOPAGO_SANDBOX:-true}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
+      - BACKEND_URL=${BACKEND_URL:-http://localhost:8000}
       - DJANGO_SETTINGS_MODULE=deconfianza.settings.dev
     command: >
       sh -c "python manage.py migrate &&
@@ -57,6 +64,7 @@ services:
     environment:
       - VITE_API_URL=${API_URL}
       - VITE_LANDING_ONLY_MODE=${LANDING_ONLY_MODE:-false}
+      - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     command: npm run dev -- --host 0.0.0.0
     networks:
       - deconfianza_dev_network

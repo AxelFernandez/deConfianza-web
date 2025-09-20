@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from .models import Categoria, Rubro, Servicio, RangoSuscripcion, Prestador, MediaPrestador, Resena
+from .models import Categoria, Rubro, Servicio, RangoSuscripcion, Prestador, MediaPrestador, Resena, ServicioPrestador
 from .serializers import (
     CategoriaSerializer, 
     RubroSerializer, 
@@ -13,7 +13,8 @@ from .serializers import (
     PrestadorListSerializer,
     PrestadorDetailSerializer,
     MediaPrestadorSerializer,
-    ResenaSerializer
+    ResenaSerializer,
+    ServicioPrestadorSerializer
 )
 
 class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
@@ -127,3 +128,18 @@ class ResenaViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['prestador', 'calificacion']
+
+
+class ServicioPrestadorViewSet(viewsets.ModelViewSet):
+    serializer_class = ServicioPrestadorSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['activo', 'servicio_base']
+    
+    def get_queryset(self):
+        if self.request.user.is_authenticated:
+            return ServicioPrestador.objects.filter(prestador=self.request.user)
+        return ServicioPrestador.objects.none()
+    
+    def perform_create(self, serializer):
+        serializer.save(prestador=self.request.user)

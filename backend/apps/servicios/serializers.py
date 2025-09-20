@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Categoria, Rubro, Servicio, RangoSuscripcion, Prestador, MediaPrestador, Resena
+from .models import Categoria, Rubro, Servicio, RangoSuscripcion, Prestador, MediaPrestador, Resena, ServicioPrestador
+from apps.usuarios.models import Plan
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,6 +26,29 @@ class MediaPrestadorSerializer(serializers.ModelSerializer):
     class Meta:
         model = MediaPrestador
         fields = '__all__'
+
+    def validate(self, attrs):
+        prestador = attrs.get('prestador')
+        tipo = attrs.get('tipo')
+        if not prestador or not tipo:
+            return attrs
+
+        user = prestador.usuario
+        perfil = getattr(user, 'perfil', None)
+        plan_code = getattr(perfil, 'plan', None)
+        plan = Plan.objects.filter(code=plan_code).first() if plan_code else None
+
+        if plan:
+            if tipo == 'imagen':
+                count_images = prestador.media.filter(tipo='imagen').count()
+                if plan.max_images and count_images >= plan.max_images:
+                    raise serializers.ValidationError({'archivo': 'Límite de imágenes alcanzado para tu plan'})
+            if tipo == 'video':
+                count_videos = prestador.media.filter(tipo='video').count()
+                if plan.max_videos and count_videos >= plan.max_videos:
+                    raise serializers.ValidationError({'archivo': 'Límite de videos alcanzado para tu plan'})
+
+        return attrs
 
 class ResenaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -67,3 +91,14 @@ class PrestadorDetailSerializer(serializers.ModelSerializer):
         if not resenas:
             return 0
         return sum(r.calificacion for r in resenas) / resenas.count()
+
+
+class ServicioPrestadorSerializer(serializers.ModelSerializer):
+    servicio_base_nombre = serializers.CharField(source='servicio_base.nombre', read_only=True)
+    prestador_username = serializers.CharField(source='prestador.username', read_only=True)
+    
+    class Meta:
+        model = ServicioPrestador
+        fields = ['id', 'prestador', 'prestador_username', 'nombre', 'descripcion', 'precio_base', 
+                  'servicio_base', 'servicio_base_nombre', 'activo', 'fecha_creacion', 'fecha_actualizacion']
+        read_only_fields = ['prestador', 'fecha_creacion', 'fecha_actualizacion']

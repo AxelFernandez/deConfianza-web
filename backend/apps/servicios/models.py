@@ -139,3 +139,23 @@ class Resena(models.Model):
     class Meta:
         verbose_name = 'Reseña'
         verbose_name_plural = 'Reseñas'
+
+
+class ServicioPrestador(models.Model):
+    """Servicios personalizados que ofrece un prestador"""
+    prestador = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='servicios_prestador')
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio_base = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    servicio_base = models.ForeignKey(Servicio, on_delete=models.SET_NULL, null=True, blank=True, 
+                                      help_text="Servicio del catálogo como referencia")
+    activo = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.prestador.username} - {self.nombre}"
+    
+    class Meta:
+        verbose_name = 'Servicio del Prestador'
+        verbose_name_plural = 'Servicios de los Prestadores'

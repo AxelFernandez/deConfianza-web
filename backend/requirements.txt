@@ -6,3 +6,6 @@ django-cors-headers==4.3.1
 Pillow==10.2.0
 python-dotenv==1.0.0
 django-filter==23.5
+google-auth==2.29.0
+requests==2.31.0
+mercadopago==2.2.1

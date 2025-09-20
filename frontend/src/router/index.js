@@ -34,12 +34,94 @@ const fullRoutes = [
     path: '/login',
     name: 'login',
     component: () => import('../views/LoginView.vue')
+  },
+  {
+    path: '/onboarding',
+    name: 'onboarding',
+    component: () => import('../views/OnboardingView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/prestador/dashboard',
+    name: 'prestadorDashboard',
+    component: () => import('../views/prestador/DashboardView.vue'),
+    meta: { requiresAuth: true, requiresPrestador: true }
+  },
+  // Rutas de suscripción MercadoPago
+  {
+    path: '/suscripcion/exito',
+    name: 'suscripcionExito',
+    component: () => import('../views/SuscripcionExito.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/suscripcion/cancelado',
+    name: 'suscripcionCancelado',
+    component: () => import('../views/SuscripcionCancelado.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/suscripcion/pendiente',
+    name: 'suscripcionPendiente',
+    component: () => import('../views/SuscripcionPendiente.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: isLandingOnlyMode ? baseRoutes : fullRoutes
+})
+
+// Protección de rutas
+router.beforeEach(async (to, from, next) => {
+  // Verificar token en localStorage
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
+
+  // Si requiere auth y no está autenticado
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next({ name: 'login', query: { redirect: to.fullPath } });
+    return;
+  }
+
+  // Si está autenticado, verificar onboarding desde Pinia
+  if (isAuthenticated) {
+    // Importar dinámicamente el store para evitar problemas de orden
+    const { useAuthStore } = await import('../stores/authStore');
+    const authStore = useAuthStore();
+    
+    // Si no tenemos user data, intentar cargarla
+    if (!authStore.user && token) {
+      try {
+        await authStore.fetchUserProfile();
+      } catch (error) {
+        console.error('Error al cargar perfil:', error);
+        // Si hay error, limpiar token y redirigir a login
+        localStorage.removeItem('token');
+        next({ name: 'login' });
+        return;
+      }
+    }
+
+    const perfil = authStore.user?.perfil;
+    const onboardingCompleted = perfil?.onboarding_completed;
+    const isPrestador = !!perfil?.es_prestador;
+
+    // Forzar onboarding si no está completado
+    if (onboardingCompleted === false && to.name !== 'onboarding') {
+      next({ name: 'onboarding' });
+      return;
+    }
+
+    // Si requiere ser prestador y no lo es
+    if (to.meta.requiresPrestador && !isPrestador) {
+      next({ name: 'home' });
+      return;
+    }
+  }
+
+  next();
 })
 
 export default router

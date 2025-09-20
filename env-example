@@ -1,49 +1,43 @@
-# Variables de entorno para DeConfianza
-# Este archivo sirve como plantilla. Copia este archivo como .env
-# según el entorno que quieras configurar.
+# Variables de entorno para el proyecto
 
-# Configuración general
-ENVIRONMENT=dev                            # dev, test, prod
+# General
 PROJECT_NAME=deconfianza
+ENVIRONMENT=dev
 
-# Configuración de Django
-DJANGO_SECRET_KEY=change-this-to-a-real-secret-key
-DJANGO_DEBUG=True                          # True, False
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+# Frontend
+FRONTEND_PORT=5173
+API_URL=http://localhost:8000/api
+LANDING_ONLY_MODE=false
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 
-# Configuración de la base de datos PostgreSQL
-POSTGRES_DB=deconfianza
+# Backend
+BACKEND_PORT=8000
+DJANGO_DEBUG=True
+DJANGO_SECRET_KEY=your-secret-key-here
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+
+# Database
+POSTGRES_HOST=db-dev
+POSTGRES_PORT=5432
+POSTGRES_DB=deconfianza_dev
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
-POSTGRES_HOST=db                           # db-dev, db-test, db-prod según el entorno
-POSTGRES_PORT=5432
 
-# Configuración de puertos
-BACKEND_PORT=8000
-FRONTEND_PORT=5173
-DB_PORT=5432
-
-# Configuración de URLs
-BACKEND_URL=http://localhost:8000
-FRONTEND_URL=http://localhost:5173
-API_URL=http://localhost:8000/api
-
-# Configuración de CORS
+# CORS/CSRF
+# En dev, DEBUG=True habilita CORS_ALLOW_ALL_ORIGINS automáticamente, pero puedes forzarlo por env.
+CORS_ALLOW_ALL_ORIGINS=false
+# Lista separada por comas
 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+# Opcional: necesarias cuando usas HTTPS y dominios reales
+CSRF_TRUSTED_ORIGINS=https://deconfianza.com.ar,https://www.deconfianza.com.ar,https://test.deconfianza.com.ar
 
-# Configuración de Email
-EMAIL_HOST=smtp.example.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=user@example.com
-EMAIL_HOST_PASSWORD=your-email-password
+# MercadoPago (Sandbox para desarrollo)
+MERCADOPAGO_ACCESS_TOKEN=TEST-1234567890-abcdef-your-access-token-here
+MERCADOPAGO_PUBLIC_KEY=TEST-abcdef-1234567890-your-public-key-here
+MERCADOPAGO_SANDBOX=true
 
-# Configuración de Nginx Proxy Manager
-NPM_ADMIN_EMAIL=admin@example.com
-NPM_ADMIN_PASSWORD=changeme
+# URLs para redirección
+FRONTEND_URL=http://localhost:5173
+BACKEND_URL=http://localhost:8000
 
-# Configuración de SSL/TLS (para producción)
-SSL_ENABLED=False
-
-# Feature flags
-LANDING_ONLY_MODE=false
+# Copia este archivo a .env para usarlo localmente
