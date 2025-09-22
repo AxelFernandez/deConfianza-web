@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { searchService } from '../services/api';
+import { searchService, catalogService } from '../services/api';
 
 export const useSearchStore = defineStore('search', () => {
   // Estado
@@ -22,20 +22,11 @@ export const useSearchStore = defineStore('search', () => {
   // Getters
   const hayResultados = computed(() => resultados.value.length > 0);
   const categorias = ref([
-    { id: '', nombre: 'Todas las categorías' },
-    { id: '1', nombre: 'Oficios' },
-    { id: '2', nombre: 'Profesiones' }
+    { id: '', nombre: 'Todas las categorías' }
   ]);
   
   const servicios = ref([
-    { id: '', nombre: 'Todos los servicios', categoria_id: '' },
-    { id: '1', nombre: 'Plomería', categoria_id: '1' },
-    { id: '2', nombre: 'Electricidad', categoria_id: '1' },
-    { id: '3', nombre: 'Carpintería', categoria_id: '1' },
-    { id: '4', nombre: 'Jardinería', categoria_id: '1' },
-    { id: '5', nombre: 'Abogacía', categoria_id: '2' },
-    { id: '6', nombre: 'Contabilidad', categoria_id: '2' },
-    { id: '7', nombre: 'Psicología', categoria_id: '2' }
+    { id: '', nombre: 'Todos los servicios', categoria_id: '' }
   ]);
   
   const serviciosFiltrados = computed(() => {
@@ -48,6 +39,30 @@ export const useSearchStore = defineStore('search', () => {
   });
   
   // Acciones
+  async function cargarCategorias() {
+    try {
+      const response = await catalogService.getCategorias();
+      categorias.value = [
+        { id: '', nombre: 'Todas las categorías' },
+        ...response.data
+      ];
+    } catch (err) {
+      console.error('Error cargando categorías:', err);
+    }
+  }
+  
+  async function cargarServicios() {
+    try {
+      const response = await catalogService.getServicios();
+      servicios.value = [
+        { id: '', nombre: 'Todos los servicios', categoria_id: '' },
+        ...response.data
+      ];
+    } catch (err) {
+      console.error('Error cargando servicios:', err);
+    }
+  }
+  
   async function buscar(params = {}) {
     loading.value = true;
     error.value = null;
@@ -62,15 +77,27 @@ export const useSearchStore = defineStore('search', () => {
     try {
       const response = await searchService.buscar({
         ...filtros.value,
-        pagina: paginacion.value.pagina
+        page: paginacion.value.pagina
       });
       
-      resultados.value = response.data.resultados;
-      paginacion.value = {
-        pagina: response.data.pagina,
-        totalPaginas: response.data.total_paginas,
-        totalResultados: response.data.total_resultados
-      };
+      // El PrestadorViewSet devuelve los datos directamente en response.data
+      resultados.value = response.data.results || response.data;
+      
+      // Manejar paginación si está disponible
+      if (response.data.count !== undefined) {
+        paginacion.value = {
+          pagina: paginacion.value.pagina,
+          totalPaginas: Math.ceil(response.data.count / 20), // 20 por página según configuración del backend
+          totalResultados: response.data.count
+        };
+      } else {
+        // Si no hay paginación, asumir que todos los resultados están en la primera página
+        paginacion.value = {
+          pagina: 1,
+          totalPaginas: 1,
+          totalResultados: resultados.value.length
+        };
+      }
     } catch (err) {
       error.value = err.response?.data?.message || 'Error al realizar la búsqueda';
       console.error('Error al buscar:', err);
@@ -93,6 +120,7 @@ export const useSearchStore = defineStore('search', () => {
       ordenar: 'relevance'
     };
     paginacion.value.pagina = 1;
+    buscar(); // Realizar búsqueda con filtros limpios
   }
   
   return {
@@ -112,6 +140,8 @@ export const useSearchStore = defineStore('search', () => {
     // Acciones
     buscar,
     cambiarPagina,
-    limpiarFiltros
+    limpiarFiltros,
+    cargarCategorias,
+    cargarServicios
   };
 });

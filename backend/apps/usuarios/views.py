@@ -45,6 +45,44 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def change_password(self, request):
+        """Cambiar contraseña del usuario actual"""
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+        
+        if not all([current_password, new_password, confirm_password]):
+            return Response(
+                {'error': 'Todos los campos son requeridos'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if new_password != confirm_password:
+            return Response(
+                {'error': 'Las contraseñas no coinciden'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if len(new_password) < 8:
+            return Response(
+                {'error': 'La nueva contraseña debe tener al menos 8 caracteres'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verificar contraseña actual
+        if not request.user.check_password(current_password):
+            return Response(
+                {'current_password': ['Contraseña actual incorrecta']}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Cambiar contraseña
+        request.user.set_password(new_password)
+        request.user.save()
+        
+        return Response({'message': 'Contraseña cambiada exitosamente'})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def complete_onboarding(self, request):
         """Completa onboarding: setea rol, plan, datos de perfil y marca completado"""
         perfil = request.user.perfil
@@ -134,13 +172,20 @@ def google_login_view(request):
             'last_name': last_name,
         })
         
-        # Asegurar que el usuario tenga perfil
-        if created:
-            Perfil.objects.create(usuario=user)  # onboarding_completed=False por defecto
-        else:
-            # Si el usuario ya existía, verificar que tenga perfil
-            if not hasattr(user, 'perfil'):
-                Perfil.objects.create(usuario=user)
+        # Obtener o crear perfil y actualizar información social
+        perfil, perfil_created = Perfil.objects.get_or_create(
+            usuario=user,
+            defaults={
+                'social_id': idinfo.get('sub'),  # Google user ID
+                'social_provider': 'google',
+            }
+        )
+        
+        # Si el perfil ya existía, actualizar información social
+        if not perfil_created:
+            perfil.social_id = idinfo.get('sub')  # Google user ID
+            perfil.social_provider = 'google'
+            perfil.save()
 
         # Emitir JWT usando SimpleJWT
         from rest_framework_simplejwt.tokens import RefreshToken

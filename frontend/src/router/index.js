@@ -47,6 +47,30 @@ const fullRoutes = [
     component: () => import('../views/prestador/DashboardView.vue'),
     meta: { requiresAuth: true, requiresPrestador: true }
   },
+  {
+    path: '/prestador/perfil',
+    name: 'prestadorPerfil',
+    component: () => import('../views/prestador/PerfilView.vue'),
+    meta: { requiresAuth: true, requiresPrestador: true }
+  },
+  {
+    path: '/prestador/configuracion',
+    name: 'prestadorConfiguracion',
+    component: () => import('../views/prestador/ConfiguracionView.vue'),
+    meta: { requiresAuth: true, requiresPrestador: true }
+  },
+  {
+    path: '/prestador/servicios',
+    name: 'prestadorServicios',
+    component: () => import('../views/prestador/ServiciosView.vue'),
+    meta: { requiresAuth: true, requiresPrestador: true }
+  },
+  {
+    path: '/prestador/resenas',
+    name: 'prestadorResenas',
+    component: () => import('../views/prestador/ResenasView.vue'),
+    meta: { requiresAuth: true, requiresPrestador: true }
+  },
   // Rutas de suscripción MercadoPago
   {
     path: '/suscripcion/exito',

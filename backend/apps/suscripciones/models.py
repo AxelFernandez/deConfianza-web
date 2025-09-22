@@ -17,6 +17,7 @@ class Suscripcion(models.Model):
         ('cancelled', 'Cancelado'),
         ('refunded', 'Reembolsado'),
         ('charged_back', 'Contracargo'),
+        ('active', 'Activo'),
     ]
     
     # Relaciones
@@ -60,7 +61,7 @@ class Suscripcion(models.Model):
             
             # Actualizar el plan del usuario
             perfil = self.usuario.perfil
-            perfil.plan = self.plan.code
+            perfil.plan = self.plan
             perfil.save()
             
             self.save()
@@ -72,8 +73,13 @@ class Suscripcion(models.Model):
         if self.activa:
             self.activa = False
             # Opcional: volver al plan gratuito
+            from apps.usuarios.models import Plan
             perfil = self.usuario.perfil
-            perfil.plan = 'free'
+            try:
+                plan_free = Plan.objects.get(code='free', is_active=True)
+                perfil.plan = plan_free
+            except Plan.DoesNotExist:
+                perfil.plan = None
             perfil.save()
             self.save()
             return True

@@ -151,7 +151,7 @@
                   <span class="text-primary-700 font-semibold">{{ formatPriceText(plan.priceText) }}</span>
                 </div>
                 <ul class="mt-3 space-y-2">
-                  <li v-for="(benefit, idx) in plan.benefits" :key="idx" class="flex items-start">
+                  <li v-for="(benefit, idx) in getPlanBenefits(plan)" :key="idx" class="flex items-start">
                     <span class="text-primary-500 mr-2 mt-0.5">
                       <font-awesome-icon :icon="['fas', 'check']" />
                     </span>
@@ -385,9 +385,10 @@
                 <select 
                   v-model="selectedCategory"
                   class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors appearance-none" 
+                  :class="{'text-neutral-400': !selectedCategory}"
                   required
                 >
-                  <option value="">Selecciona una categoría</option>
+                  <option value="" disabled>Selecciona una categoría</option>
                   <option v-for="category in categories" :key="category.id" :value="category.id">
                     {{ category.name }}
                   </option>
@@ -399,10 +400,13 @@
                 <select 
                   v-model="selectedRubro"
                   class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors appearance-none" 
+                  :class="{'text-neutral-400': !selectedRubro}"
                   required
                   :disabled="!selectedCategory"
                 >
-                  <option value="">Selecciona un rubro</option>
+                  <option value="" disabled>
+                    {{ !selectedCategory ? 'Primero selecciona una categoría' : 'Selecciona un rubro' }}
+                  </option>
                   <option v-for="rubro in filteredRubros" :key="rubro.id" :value="rubro.id">
                     {{ rubro.name }}
                   </option>
@@ -447,7 +451,7 @@
                   <div class="mt-4">
                     <h4 class="font-medium text-neutral-800 mb-2">Beneficios incluidos:</h4>
                     <ul class="space-y-1 text-sm text-neutral-700">
-                      <li v-for="benefit in selectedPlanData?.benefits" :key="benefit" class="flex items-center">
+                      <li v-for="benefit in getPlanBenefits(selectedPlanData)" :key="benefit" class="flex items-center">
                         <font-awesome-icon :icon="['fas', 'check']" class="text-green-500 mr-2 text-xs" />
                         {{ benefit }}
                       </li>
@@ -497,8 +501,13 @@
                 <div>
                   <h4 class="font-medium text-blue-900">Próximos pasos</h4>
                   <p class="text-sm text-blue-800 mt-1">
-                    Serás redirigido a MercadoPago para completar el pago de tu suscripción. 
-                    Una vez confirmado el pago, tu plan se activará automáticamente.
+                    <span v-if="isSelectedPlanFree()">
+                      Tu plan gratuito se activará inmediatamente. Podrás comenzar a usar la plataforma de inmediato.
+                    </span>
+                    <span v-else>
+                      Serás redirigido a MercadoPago para completar el pago de tu suscripción. 
+                      Una vez confirmado el pago, tu plan se activará automáticamente.
+                    </span>
                   </p>
                 </div>
               </div>
@@ -517,8 +526,11 @@
                 class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-8 rounded-lg transition-colors flex items-center"
               >
                 <font-awesome-icon v-if="procesandoPago" :icon="['fas', 'spinner']" class="animate-spin mr-2" />
+                <font-awesome-icon v-else-if="isSelectedPlanFree()" :icon="['fas', 'check']" class="mr-2" />
                 <font-awesome-icon v-else :icon="['fas', 'credit-card']" class="mr-2" />
-                {{ procesandoPago ? 'Procesando...' : 'Suscribirse con MercadoPago' }}
+                <span v-if="procesandoPago">Procesando...</span>
+                <span v-else-if="isSelectedPlanFree()">Continuar Gratis</span>
+                <span v-else>Suscribirse con MercadoPago</span>
               </button>
             </div>
           </div>
@@ -544,7 +556,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import { onboardingService, catalogService, mercadoPagoService } from '../services/api';
@@ -573,6 +585,36 @@ const subscriptionPlans = ref([]);
 const loadingPlans = ref(false);
 const loadError = ref('');
 
+// Función para convertir campos habilitados en descripciones amigables
+const getFieldDescription = (field) => {
+  const descriptions = {
+    'telefono': 'Mostrar teléfono de contacto',
+    'direccion': 'Mostrar dirección del negocio',
+    'ciudad': 'Mostrar ciudad de ubicación',
+    'provincia': 'Mostrar provincia',
+    'sitio_web': 'Incluir enlace a sitio web',
+    'descripcion': 'Mostrar descripción del servicio'
+  };
+  return descriptions[field] || field;
+};
+
+// Función para obtener beneficios del plan basado en campos habilitados
+const getPlanBenefits = (plan) => {
+  if (!plan || !Array.isArray(plan.fieldsEnabled)) return [];
+  
+  const benefits = plan.fieldsEnabled.map(field => getFieldDescription(field));
+  
+  // Agregar beneficios adicionales basados en max_images y max_videos
+  if (plan.maxImages > 0) {
+    benefits.push(`Hasta ${plan.maxImages} imágenes`);
+  }
+  if (plan.maxVideos > 0) {
+    benefits.push(`Hasta ${plan.maxVideos} videos`);
+  }
+  
+  return benefits;
+};
+
 // Estado de pago
 const procesandoPago = ref(false);
 
@@ -586,7 +628,6 @@ onMounted(async () => {
       code: p.code,
       name: p.name,
       priceText: p.price_text,
-      benefits: Array.isArray(p.benefits) ? p.benefits : [],
       fieldsEnabled: Array.isArray(p.fields_enabled) ? p.fields_enabled : [],
       maxImages: typeof p.max_images === 'number' ? p.max_images : 0,
       maxVideos: typeof p.max_videos === 'number' ? p.max_videos : 0,
@@ -655,13 +696,32 @@ function nextStep() {
   // Para prestadores: máximo 5 pasos (tipo -> plan -> perfil -> servicios -> completado)
   const maxSteps = userType.value === 'cliente' ? 3 : 5;
   if (currentStep.value < maxSteps) {
+    // Capturar posición actual del scroll
+    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
     currentStep.value++;
+    
+    // Usar nextTick para asegurar que el DOM se actualice antes de ajustar scroll
+    nextTick(() => {
+      // Si el usuario estaba en la parte superior, mantenerlo ahí
+      // Si no, mantener una posición razonable (parte superior para mejor UX)
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   }
 }
 
 function prevStep() {
   if (currentStep.value > 1) {
+    // Capturar posición actual del scroll
+    const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
     currentStep.value--;
+    
+    // Usar nextTick para asegurar que el DOM se actualice antes de ajustar scroll
+    nextTick(() => {
+      // Volver al inicio para mejor UX al retroceder
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   }
 }
 
@@ -705,8 +765,26 @@ async function procesarPago() {
     // Primero completar onboarding
     await finishOnboarding();
     
-    // Si el plan es gratuito, no necesita pago
-    if (selectedPlan.value === 'free') {
+    // Verificar si el plan es gratuito (por código o por precio)
+    const planData = subscriptionPlans.value.find(p => p.code === selectedPlan.value);
+    const isPlanFree = selectedPlan.value === 'free' || (planData && planData.priceText === 'Gratis') || (planData && parseFloat(planData.priceText) === 0);
+    
+    if (isPlanFree) {
+      console.log('Plan gratuito detectado, activando directamente...');
+      // Para planes gratuitos, aún necesitamos activar la suscripción
+      try {
+        const response = await mercadoPagoService.crearPreferencia(selectedPlan.value);
+        console.log('Plan gratuito activado:', response.data);
+        // El backend debería devolver is_free: true para planes gratuitos
+        if (response.data.is_free) {
+          // Plan activado exitosamente, redirigir al dashboard
+          goToDashboard();
+          return;
+        }
+      } catch (error) {
+        console.error('Error activando plan gratuito:', error);
+        alert('Error al activar el plan gratuito. Por favor, intenta de nuevo.');
+      }
       return;
     }
     
@@ -757,6 +835,19 @@ function isFieldEnabled(fieldName) {
   if (!plan) return false;
   if (!Array.isArray(plan.fieldsEnabled)) return false;
   return plan.fieldsEnabled.includes(fieldName);
+}
+
+function isSelectedPlanFree() {
+  // Determina si el plan seleccionado es gratuito
+  if (!selectedPlan.value) return false;
+  
+  if (selectedPlan.value === 'free') return true;
+  
+  const planData = subscriptionPlans.value.find(p => p.code === selectedPlan.value);
+  if (!planData) return false;
+  
+  // Verificar si el precio es 0 o "Gratis"
+  return planData.priceText === 'Gratis' || parseFloat(planData.priceText) === 0;
 }
 
 function fieldLabel(key) {

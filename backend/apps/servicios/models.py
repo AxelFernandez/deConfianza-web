@@ -27,44 +27,23 @@ class Rubro(models.Model):
         verbose_name_plural = 'Rubros'
 
 class Servicio(models.Model):
-    """Servicios específicos (ej: Plomería, Abogacía, etc.)"""
-    nombre = models.CharField(max_length=100)
-    descripcion = models.TextField(blank=True)
+    """Servicios que ofrece un prestador"""
+    prestador = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='servicios_creados')
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField()
+    precio_base = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='servicios')
     rubro = models.ForeignKey(Rubro, on_delete=models.CASCADE, related_name='servicios')
+    activo = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return self.nombre
+        return f"{self.prestador.username} - {self.nombre}"
     
     class Meta:
         verbose_name = 'Servicio'
         verbose_name_plural = 'Servicios'
-
-class RangoSuscripcion(models.Model):
-    """Rangos de suscripción disponibles"""
-    RANGO_CHOICES = [
-        (1, 'Rango 1 - Gratuito'),
-        (2, 'Rango 2 - Básico'),
-        (3, 'Rango 3 - Premium'),
-        (4, 'Rango 4 - Destacado'),
-    ]
-    
-    nombre = models.CharField(max_length=50)
-    rango = models.IntegerField(choices=RANGO_CHOICES, unique=True)
-    precio_usd = models.DecimalField(max_digits=6, decimal_places=2, default=0)
-    descripcion = models.TextField()
-    limite_imagenes = models.IntegerField(default=0)
-    limite_videos = models.IntegerField(default=0)
-    permite_resenas = models.BooleanField(default=False)
-    asesoria_empresarial = models.BooleanField(default=False)
-    acceso_informes = models.BooleanField(default=False)
-    posicion_destacada = models.BooleanField(default=False)
-    
-    def __str__(self):
-        return self.nombre
-    
-    class Meta:
-        verbose_name = 'Rango de Suscripción'
-        verbose_name_plural = 'Rangos de Suscripción'
 
 class Prestador(models.Model):
     """Prestador de servicios"""
@@ -75,8 +54,6 @@ class Prestador(models.Model):
     sitio_web = models.URLField(blank=True)
     descripcion = models.TextField(blank=True)
     redes_sociales = models.JSONField(default=dict, blank=True)
-    servicios = models.ManyToManyField(Servicio, related_name='prestadores')
-    rango_suscripcion = models.ForeignKey(RangoSuscripcion, on_delete=models.SET_NULL, null=True)
     fecha_inicio_suscripcion = models.DateField(null=True, blank=True)
     fecha_fin_suscripcion = models.DateField(null=True, blank=True)
     
@@ -86,12 +63,6 @@ class Prestador(models.Model):
     ciudad = models.CharField(max_length=100)
     provincia = models.CharField(max_length=100)
     pais = models.CharField(max_length=100, default="Argentina")
-    
-    # Campos adicionales para rangos superiores
-    mision = models.TextField(blank=True)
-    vision = models.TextField(blank=True)
-    valores = models.TextField(blank=True)
-    tarifario = models.JSONField(default=dict, blank=True)
     
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
@@ -141,21 +112,18 @@ class Resena(models.Model):
         verbose_name_plural = 'Reseñas'
 
 
-class ServicioPrestador(models.Model):
-    """Servicios personalizados que ofrece un prestador"""
-    prestador = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='servicios_prestador')
-    nombre = models.CharField(max_length=200)
-    descripcion = models.TextField()
-    precio_base = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    servicio_base = models.ForeignKey(Servicio, on_delete=models.SET_NULL, null=True, blank=True, 
-                                      help_text="Servicio del catálogo como referencia")
-    activo = models.BooleanField(default=True)
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+
+class VisualizacionPerfil(models.Model):
+    """Registro de visualizaciones del perfil del prestador"""
+    prestador = models.ForeignKey(Prestador, on_delete=models.CASCADE, related_name='visualizaciones')
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField(blank=True)
+    fecha = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"{self.prestador.username} - {self.nombre}"
+        return f"{self.prestador.nombre_comercial} - {self.fecha.strftime('%Y-%m-%d %H:%M')}"
     
     class Meta:
-        verbose_name = 'Servicio del Prestador'
-        verbose_name_plural = 'Servicios de los Prestadores'
+        verbose_name = 'Visualización de Perfil'
+        verbose_name_plural = 'Visualizaciones de Perfiles'

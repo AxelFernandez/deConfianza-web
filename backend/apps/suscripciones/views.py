@@ -30,9 +30,41 @@ def crear_preferencia_pago(request):
     except Plan.DoesNotExist:
         return Response({'error': 'Plan no encontrado'}, status=status.HTTP_404_NOT_FOUND)
     
-    # Verificar que el plan tenga precio
+    # Si el plan es gratuito, activarlo directamente sin pago
     if plan.precio_mensual <= 0:
-        return Response({'error': 'Plan gratuito no requiere pago'}, status=status.HTTP_400_BAD_REQUEST)
+        # Activar plan gratuito directamente
+        from apps.usuarios.models import Perfil
+        try:
+            perfil = request.user.perfil
+            perfil.plan = plan
+            perfil.save()
+            
+            # Crear registro de suscripción gratuita
+            suscripcion, created = Suscripcion.objects.get_or_create(
+                usuario=request.user,
+                plan=plan,
+                defaults={
+                    'estado': 'active',
+                    'monto': 0,
+                    'fecha_inicio': timezone.now(),
+                }
+            )
+            
+            if not created and suscripcion.estado != 'active':
+                suscripcion.estado = 'active'
+                suscripcion.fecha_inicio = timezone.now()
+                suscripcion.save()
+            
+            return Response({
+                'message': 'Plan gratuito activado exitosamente',
+                'plan': plan.name,
+                'is_free': True,
+                'suscripcion_id': suscripcion.id
+            })
+            
+        except Exception as e:
+            logger.error(f"Error activando plan gratuito: {str(e)}")
+            return Response({'error': 'Error activando plan gratuito'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Configurar MercadoPago
     if not settings.MERCADOPAGO_ACCESS_TOKEN:
@@ -43,6 +75,19 @@ def crear_preferencia_pago(request):
     # Crear external_reference único
     external_reference = f"{request.user.id}_{plan.code}_{int(timezone.now().timestamp())}"
     
+    # URLs para desarrollo vs producción
+    if settings.DEBUG and 'localhost' in settings.FRONTEND_URL:
+        # En desarrollo local, usamos URLs de ejemplo válidas para MercadoPago
+        base_url = "https://localhost:5173"
+        success_url = f"{base_url}/suscripcion/exito?external_reference={external_reference}"
+        failure_url = f"{base_url}/suscripcion/cancelado?external_reference={external_reference}"
+        pending_url = f"{base_url}/suscripcion/pendiente?external_reference={external_reference}"
+    else:
+        # En producción usamos las URLs reales
+        success_url = f"{settings.FRONTEND_URL}/suscripcion/exito"
+        failure_url = f"{settings.FRONTEND_URL}/suscripcion/cancelado"
+        pending_url = f"{settings.FRONTEND_URL}/suscripcion/pendiente"
+
     # Crear preferencia
     preference_data = {
         "items": [
@@ -60,17 +105,19 @@ def crear_preferencia_pago(request):
             "email": request.user.email,
         },
         "back_urls": {
-            "success": f"{settings.FRONTEND_URL}/suscripcion/exito",
-            "failure": f"{settings.FRONTEND_URL}/suscripcion/cancelado",
-            "pending": f"{settings.FRONTEND_URL}/suscripcion/pendiente"
+            "success": success_url,
+            "failure": failure_url,
+            "pending": pending_url
         },
-        "auto_return": "approved",
         "external_reference": external_reference,
         "notification_url": f"{settings.BACKEND_URL}/api/suscripciones/webhook/mercadopago/",
         "expires": True,
         "expiration_date_from": timezone.now().isoformat(),
         "expiration_date_to": (timezone.now() + timezone.timedelta(hours=24)).isoformat(),
     }
+    
+    logger.info(f"Creando preferencia MP para usuario {request.user.id}, plan {plan.code}")
+    logger.info(f"URLs configuradas - Success: {success_url}, Failure: {failure_url}, Pending: {pending_url}")
     
     try:
         preference_response = sdk.preference().create(preference_data)

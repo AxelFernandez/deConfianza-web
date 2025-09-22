@@ -4,23 +4,26 @@ from .views import (
     CategoriaViewSet, 
     RubroViewSet, 
     ServicioViewSet, 
-    RangoSuscripcionViewSet, 
     PrestadorViewSet, 
     MediaPrestadorViewSet, 
     ResenaViewSet,
-    ServicioPrestadorViewSet
+    dashboard_prestador,
+    registrar_visualizacion
 )
 
 router = DefaultRouter()
 router.register('categorias', CategoriaViewSet)
 router.register('rubros', RubroViewSet)
 router.register('servicios', ServicioViewSet)
-router.register('rangos', RangoSuscripcionViewSet)
 router.register('prestadores', PrestadorViewSet)
 router.register('media', MediaPrestadorViewSet)
 router.register('resenas', ResenaViewSet)
-router.register('mis-servicios', ServicioPrestadorViewSet, basename='servicio-prestador')
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('dashboard/', dashboard_prestador, name='dashboard_prestador'),
+    path('mis-servicios/', ServicioViewSet.as_view({'get': 'mis_servicios', 'post': 'create'}), name='mis-servicios-list'),
+    path('mis-servicios/<int:pk>/', ServicioViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='mis-servicios-detail'),
+    path('mis-resenas/', ServicioViewSet.as_view({'get': 'mis_resenas'}), name='mis-resenas-list'),
+    path('registrar-visualizacion/', registrar_visualizacion, name='registrar-visualizacion'),
 ]

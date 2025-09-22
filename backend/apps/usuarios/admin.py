@@ -34,10 +34,26 @@ class PlanAdminForm(forms.ModelForm):
 @admin.register(Plan)
 class PlanAdmin(admin.ModelAdmin):
     form = PlanAdminForm
-    list_display = ("code", "name", "price_text", "precio_mensual", "max_images", "max_videos", "is_active", "order")
-    list_filter = ("is_active",)
+    list_display = ("code", "name", "price_text", "precio_mensual", "max_servicios", "puede_crear_servicios", "puede_recibir_resenas", "puede_subir_media", "puede_ver_estadisticas", "is_active", "order")
+    list_filter = ("is_active", "puede_crear_servicios", "puede_recibir_resenas", "puede_subir_media", "puede_ver_estadisticas")
     search_fields = ("code", "name")
     ordering = ("order", "id")
-    list_editable = ("precio_mensual", "max_images", "max_videos", "is_active", "order")
+    list_editable = ("precio_mensual", "max_servicios", "puede_crear_servicios", "puede_recibir_resenas", "puede_subir_media", "puede_ver_estadisticas", "is_active", "order")
+    
+    fieldsets = (
+        ('Información básica', {
+            'fields': ('code', 'name', 'price_text', 'precio_mensual', 'is_active', 'order')
+        }),
+        ('Campos de perfil', {
+            'fields': ('fields_enabled',)
+        }),
+        ('Límites de contenido', {
+            'fields': ('max_images', 'max_videos', 'max_servicios')
+        }),
+        ('Permisos', {
+            'fields': ('puede_crear_servicios', 'puede_recibir_resenas', 'puede_subir_media', 'puede_ver_estadisticas'),
+            'description': 'Controla qué funcionalidades están disponibles para este plan'
+        }),
+    )
 
 

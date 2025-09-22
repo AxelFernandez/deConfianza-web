@@ -54,7 +54,7 @@ apiClient.interceptors.response.use(
 export const prestadorService = {
   // Obtener un prestador por ID
   getPrestador(id) {
-    return apiClient.get(`/servicios/prestador/${id}/`);
+    return apiClient.get(`/servicios/prestadores/${id}/`);
   },
   
   // Obtener lista de prestadores con filtros opcionales
@@ -64,12 +64,17 @@ export const prestadorService = {
   
   // Obtener reseñas de un prestador
   getResenasPrestador(id) {
-    return apiClient.get(`/servicios/prestador/${id}/resenas/`);
+    return apiClient.get(`/servicios/prestadores/${id}/resenas/`);
   },
   
   // Enviar una nueva reseña
   crearResena(prestadorId, data) {
-    return apiClient.post(`/servicios/prestador/${prestadorId}/resenas/`, data);
+    return apiClient.post(`/servicios/prestadores/${prestadorId}/resenas/`, data);
+  },
+  
+  // Registrar visualización de perfil
+  registrarVisualizacion(prestadorId) {
+    return apiClient.post('/servicios/registrar-visualizacion/', { prestador_id: prestadorId });
   }
 };
 
@@ -99,6 +104,10 @@ export const authService = {
   updateProfile(userData) {
     return apiClient.put('/usuarios/update_me/', userData);
   },
+  
+  changePassword(passwordData) {
+    return apiClient.post('/usuarios/change-password/', passwordData);
+  },
 };
 
 // Servicios para onboarding / planes
@@ -114,7 +123,7 @@ export const onboardingService = {
 // Servicios API para búsqueda
 export const searchService = {
   buscar(params) {
-    return apiClient.get('/servicios/buscar/', { params });
+    return apiClient.get('/servicios/prestadores/', { params });
   }
 };
 
@@ -145,6 +154,18 @@ export const misServiciosService = {
   deleteServicio(id) {
     return apiClient.delete(`/servicios/mis-servicios/${id}/`);
   },
+  
+  getDashboard() {
+    return apiClient.get('/servicios/dashboard/');
+  },
+  
+  getMisResenas() {
+    return apiClient.get('/servicios/mis-resenas/');
+  },
+  
+  registrarVisualizacion(prestadorId) {
+    return apiClient.post('/servicios/registrar-visualizacion/', { prestador_id: prestadorId });
+  }
 };
 
 export const mercadoPagoService = {

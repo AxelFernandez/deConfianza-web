@@ -3,11 +3,10 @@ from .models import (
     Categoria,
     Rubro,
     Servicio,
-    RangoSuscripcion,
     Prestador,
     MediaPrestador,
     Resena,
-    ServicioPrestador,
+    VisualizacionPerfil,
 )
 
 
@@ -26,22 +25,15 @@ class RubroAdmin(admin.ModelAdmin):
 
 @admin.register(Servicio)
 class ServicioAdmin(admin.ModelAdmin):
-    list_display = ("id", "nombre", "rubro")
-    list_filter = ("rubro",)
-    search_fields = ("nombre",)
-
-
-@admin.register(RangoSuscripcion)
-class RangoSuscripcionAdmin(admin.ModelAdmin):
-    list_display = ("id", "nombre", "rango", "precio_usd")
-    list_filter = ("rango",)
-    search_fields = ("nombre",)
+    list_display = ("id", "nombre", "prestador", "categoria", "rubro", "precio_base", "activo", "fecha_creacion")
+    list_filter = ("activo", "categoria", "rubro", "fecha_creacion")
+    search_fields = ("nombre", "prestador__username", "descripcion")
 
 
 @admin.register(Prestador)
 class PrestadorAdmin(admin.ModelAdmin):
     list_display = ("id", "nombre_comercial", "usuario", "ciudad", "provincia", "pais")
-    list_filter = ("ciudad", "provincia", "pais", "rango_suscripcion")
+    list_filter = ("ciudad", "provincia", "pais")
     search_fields = ("nombre_comercial", "usuario__username", "usuario__email")
 
 
@@ -59,10 +51,13 @@ class ResenaAdmin(admin.ModelAdmin):
     search_fields = ("prestador__nombre_comercial", "nombre", "comentario")
 
 
-@admin.register(ServicioPrestador)
-class ServicioPrestadorAdmin(admin.ModelAdmin):
-    list_display = ("id", "prestador", "nombre", "precio_base", "activo", "fecha_creacion")
-    list_filter = ("activo", "fecha_creacion", "servicio_base")
-    search_fields = ("prestador__username", "nombre", "descripcion")
+
+
+@admin.register(VisualizacionPerfil)
+class VisualizacionPerfilAdmin(admin.ModelAdmin):
+    list_display = ("id", "prestador", "ip_address", "fecha")
+    list_filter = ("fecha", "prestador")
+    search_fields = ("prestador__nombre_comercial", "ip_address")
+    readonly_fields = ("fecha",)
 
 

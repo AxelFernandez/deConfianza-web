@@ -4,7 +4,10 @@
     <header class="bg-white shadow-sm">
       <div class="container-custom py-4">
         <div class="flex justify-between items-center">
-          <h1 class="text-xl font-semibold text-neutral-900">Panel de prestador</h1>
+          <div>
+            <h1 class="text-xl font-semibold text-neutral-900">Mis servicios</h1>
+            <p class="text-sm text-neutral-600 mt-1">Gestiona los servicios que ofreces</p>
+          </div>
           <div class="flex items-center space-x-4">
             <span class="text-sm text-neutral-600">{{ authStore.fullName }}</span>
             <button 
@@ -29,63 +32,10 @@
         
         <!-- Contenido -->
         <div class="md:col-span-3">
-          <!-- Tarjetas de resumen -->
-          <PermissionWrapper 
-            :has-permission="canViewStats" 
-            title="Estadísticas Premium"
-            message="Estadísticas detalladas disponibles en planes superiores"
-            icon="chart-bar"
-            @upgrade="handleUpgrade"
-          >
-            <div class="grid md:grid-cols-3 gap-4 mb-6">
-              <div class="bg-white rounded-lg shadow-sm border border-neutral-100 p-4">
-                <div class="flex items-center">
-                  <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-4">
-                    <font-awesome-icon :icon="['fas', 'eye']" />
-                  </div>
-                  <div>
-                    <h3 class="text-sm text-neutral-500 font-medium">Visualizaciones</h3>
-                    <p class="text-2xl font-semibold text-neutral-900">
-                      {{ loadingDashboard ? '...' : (dashboardData?.estadisticas?.total_visualizaciones || 0) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="bg-white rounded-lg shadow-sm border border-neutral-100 p-4">
-                <div class="flex items-center">
-                  <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-4">
-                    <font-awesome-icon :icon="['fas', 'star']" />
-                  </div>
-                  <div>
-                    <h3 class="text-sm text-neutral-500 font-medium">Calificación</h3>
-                    <p class="text-2xl font-semibold text-neutral-900">
-                      {{ loadingDashboard ? '...' : (dashboardData?.estadisticas?.promedio_calificacion || 0) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="bg-white rounded-lg shadow-sm border border-neutral-100 p-4">
-                <div class="flex items-center">
-                  <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 mr-4">
-                    <font-awesome-icon :icon="['fas', 'comments']" />
-                  </div>
-                  <div>
-                    <h3 class="text-sm text-neutral-500 font-medium">Reseñas</h3>
-                    <p class="text-2xl font-semibold text-neutral-900">
-                      {{ loadingDashboard ? '...' : (dashboardData?.estadisticas?.total_resenas || 0) }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </PermissionWrapper>
-          
-          <!-- Información del plan -->
+          <!-- Información del plan y límites -->
           <div class="bg-white rounded-lg shadow-sm border border-neutral-100 p-6 mb-6">
             <div class="flex justify-between items-center mb-4">
-              <h2 class="text-lg font-semibold text-neutral-900">Tu plan actual</h2>
+              <h2 class="text-lg font-semibold text-neutral-900">Límites de tu plan</h2>
               <button class="text-sm text-primary-600 hover:text-primary-800 font-medium">
                 Cambiar plan
               </button>
@@ -147,8 +97,8 @@
             icon="briefcase"
             @upgrade="handleUpgrade"
           >
-            <div class="bg-white rounded-lg shadow-sm border border-neutral-100 p-6 mb-6">
-              <div class="flex justify-between items-center mb-4">
+            <div class="bg-white rounded-lg shadow-sm border border-neutral-100 p-6">
+              <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-neutral-900">Mis servicios</h2>
                 <button 
                   @click="showAddServiceModal = true"
@@ -164,97 +114,70 @@
                 </button>
               </div>
             
-            <div v-if="loading" class="text-center py-8">
-              <font-awesome-icon :icon="['fas', 'spinner']" class="text-primary-600 text-2xl animate-spin" />
-            </div>
-            
-            <div v-else-if="misServicios.length" class="space-y-4">
-              <div v-for="servicio in misServicios" :key="servicio.id" class="border border-neutral-200 rounded-lg p-4">
-                <div class="flex justify-between items-start">
-                  <div class="flex-1">
-                    <h3 class="font-medium text-neutral-900">{{ servicio.nombre }}</h3>
-                    <p class="text-sm text-neutral-600 mt-1">{{ servicio.descripcion }}</p>
-                    <div class="flex items-center mt-2 text-sm text-neutral-500">
-                      <span v-if="servicio.precio_base" class="mr-4">
-                        <font-awesome-icon :icon="['fas', 'dollar-sign']" class="mr-1" />
-                        ${{ servicio.precio_base }}
-                      </span>
-                      <span :class="servicio.activo ? 'text-green-600' : 'text-red-600'">
-                        <font-awesome-icon :icon="['fas', servicio.activo ? 'check-circle' : 'times-circle']" class="mr-1" />
-                        {{ servicio.activo ? 'Activo' : 'Inactivo' }}
-                      </span>
+              <div v-if="loading" class="text-center py-8">
+                <font-awesome-icon :icon="['fas', 'spinner']" class="text-primary-600 text-2xl animate-spin" />
+              </div>
+              
+              <div v-else-if="misServicios.length" class="space-y-4">
+                <div v-for="servicio in misServicios" :key="servicio.id" class="border border-neutral-200 rounded-lg p-4">
+                  <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                      <h3 class="font-medium text-neutral-900">{{ servicio.nombre }}</h3>
+                      <p class="text-sm text-neutral-600 mt-1">{{ servicio.descripcion }}</p>
+                      <div class="flex items-center mt-2 text-sm text-neutral-500">
+                        <span v-if="servicio.precio_base" class="mr-4">
+                          <font-awesome-icon :icon="['fas', 'dollar-sign']" class="mr-1" />
+                          ${{ servicio.precio_base }}
+                        </span>
+                        <span class="mr-4">
+                          <font-awesome-icon :icon="['fas', 'tag']" class="mr-1" />
+                          {{ servicio.categoria_nombre }} - {{ servicio.rubro_nombre }}
+                        </span>
+                        <span :class="servicio.activo ? 'text-green-600' : 'text-red-600'">
+                          <font-awesome-icon :icon="['fas', servicio.activo ? 'check-circle' : 'times-circle']" class="mr-1" />
+                          {{ servicio.activo ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      </div>
+                      <div class="text-xs text-neutral-400 mt-2">
+                        Creado: {{ formatDate(servicio.fecha_creacion) }}
+                      </div>
                     </div>
-                  </div>
-                  <div class="flex space-x-2">
-                    <button 
-                      @click="editService(servicio)"
-                      class="text-neutral-600 hover:text-primary-600 transition-colors"
-                    >
-                      <font-awesome-icon :icon="['fas', 'edit']" />
-                    </button>
-                    <button 
-                      @click="deleteService(servicio.id)"
-                      class="text-neutral-600 hover:text-red-600 transition-colors"
-                    >
-                      <font-awesome-icon :icon="['fas', 'trash']" />
-                    </button>
+                    <div class="flex space-x-2">
+                      <button 
+                        @click="editService(servicio)"
+                        class="text-neutral-600 hover:text-primary-600 transition-colors p-2"
+                        title="Editar servicio"
+                      >
+                        <font-awesome-icon :icon="['fas', 'edit']" />
+                      </button>
+                      <button 
+                        @click="deleteService(servicio.id)"
+                        class="text-neutral-600 hover:text-red-600 transition-colors p-2"
+                        title="Eliminar servicio"
+                      >
+                        <font-awesome-icon :icon="['fas', 'trash']" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            <div v-else class="text-center py-8 text-neutral-500">
-              <font-awesome-icon :icon="['fas', 'briefcase']" class="text-3xl mb-2" />
-              <p class="mb-4">Aún no tienes servicios publicados</p>
-              <button 
-                @click="showAddServiceModal = true"
-                class="bg-primary-600 hover:bg-primary-700 text-white text-sm px-4 py-2 rounded-lg transition-colors"
-              >
-                Agregar mi primer servicio
-              </button>
-            </div>
-            </div>
-          </PermissionWrapper>
-          
-          <!-- Últimas reseñas -->
-          <PermissionWrapper 
-            :has-permission="canReceiveReviews" 
-            title="Reseñas no disponibles"
-            message="Función de reseñas no incluida en tu plan actual"
-            icon="star"
-            @upgrade="handleUpgrade"
-          >
-            <div class="bg-white rounded-lg shadow-sm border border-neutral-100 p-6">
-              <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-neutral-900">Últimas reseñas</h2>
-                <a href="#" class="text-sm text-primary-600 hover:text-primary-800 font-medium">
-                  Ver todas
-                </a>
+              
+              <div v-else class="text-center py-12 text-neutral-500">
+                <font-awesome-icon :icon="['fas', 'briefcase']" class="text-4xl mb-4" />
+                <h3 class="text-lg font-medium mb-2">Aún no tienes servicios publicados</h3>
+                <p class="mb-6">Comienza agregando tu primer servicio para que los clientes puedan encontrarte</p>
+                <button 
+                  @click="showAddServiceModal = true"
+                  :disabled="!canAddService"
+                  :class="canAddService 
+                    ? 'bg-primary-600 hover:bg-primary-700 text-white' 
+                    : 'bg-neutral-300 text-neutral-500 cursor-not-allowed'"
+                  class="px-6 py-3 rounded-lg transition-colors"
+                >
+                  <font-awesome-icon :icon="['fas', 'plus']" class="mr-2" />
+                  Agregar mi primer servicio
+                </button>
               </div>
-            
-            <div v-if="loadingDashboard" class="text-center py-8">
-              <font-awesome-icon :icon="['fas', 'spinner']" class="text-primary-600 text-2xl animate-spin" />
-            </div>
-            
-            <div v-else-if="dashboardData?.ultimas_resenas?.length" class="space-y-4">
-              <div v-for="resena in dashboardData.ultimas_resenas" :key="resena.id" class="border-b border-neutral-200 pb-4 last:border-0 last:pb-0">
-                <div class="flex justify-between items-start mb-2">
-                  <div>
-                    <h4 class="font-medium text-neutral-900">{{ resena.nombre }}</h4>
-                    <div class="flex text-yellow-400">
-                      <font-awesome-icon :icon="['fas', 'star']" v-for="i in resena.calificacion" :key="i" class="text-sm" />
-                    </div>
-                  </div>
-                  <span class="text-xs text-neutral-500">{{ resena.fecha }}</span>
-                </div>
-                <p class="text-sm text-neutral-600">{{ resena.comentario }}</p>
-              </div>
-            </div>
-            
-            <div v-else class="text-center py-8 text-neutral-500">
-              <font-awesome-icon :icon="['fas', 'comment-slash']" class="text-3xl mb-2" />
-              <p>Aún no tienes reseñas</p>
-            </div>
             </div>
           </PermissionWrapper>
         </div>
@@ -300,18 +223,6 @@ const canAddService = computed(() => {
   const totalServicios = dashboardData.value.estadisticas?.total_servicios || 0;
   const maxServicios = dashboardData.value.limitaciones.max_servicios;
   return totalServicios < maxServicios;
-});
-
-const canReceiveReviews = computed(() => {
-  return dashboardData.value?.limitaciones?.puede_recibir_resenas ?? true;
-});
-
-const canUploadMedia = computed(() => {
-  return dashboardData.value?.limitaciones?.puede_subir_media ?? true;
-});
-
-const canViewStats = computed(() => {
-  return dashboardData.value?.limitaciones?.puede_ver_estadisticas ?? true;
 });
 
 // Cargar datos del dashboard
@@ -376,15 +287,22 @@ function handleUpgrade() {
   alert('Funcionalidad de upgrade de plan próximamente disponible');
 }
 
+// Función para formatear fechas
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
 onMounted(() => {
   loadDashboard();
   loadServicios();
 });
-
-// Datos reales del dashboard obtenidos de la API
 </script>
 
 <style scoped>
 /* Todos los estilos están en las clases de Tailwind */
 </style>
-

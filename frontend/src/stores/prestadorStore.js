@@ -19,8 +19,8 @@ export const usePrestadorStore = defineStore('prestador', () => {
   
   const cantidadResenas = computed(() => resenas.value.length);
   
-  const tieneImagenes = computed(() => 
-    prestador.value && prestador.value.imagenes && prestador.value.imagenes.length > 0
+  const tieneMedia = computed(() => 
+    prestador.value && prestador.value.media && prestador.value.media.length > 0
   );
   
   const serviciosAgrupados = computed(() => {
@@ -102,7 +102,7 @@ export const usePrestadorStore = defineStore('prestador', () => {
     // Getters
     promedioPuntuacion,
     cantidadResenas,
-    tieneImagenes,
+    tieneMedia,
     serviciosAgrupados,
     
     // Acciones

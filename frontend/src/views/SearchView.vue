@@ -1,33 +1,45 @@
 <template>
-  <div>
-    <section class="bg-primary-600 text-white py-10">
-      <div class="container-custom">
-        <h1 class="text-2xl md:text-3xl font-display font-bold mb-6">Buscar servicios</h1>
-        <form @submit.prevent="realizarBusqueda" class="bg-white p-5 rounded-xl shadow-lg">
-          <div class="grid md:grid-cols-4 gap-4">
-            <div>
-              <label for="location" class="block text-sm font-medium text-neutral-700 mb-1">Ubicación</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-neutral-500">
-                  <font-awesome-icon :icon="['fas', 'map-marker-alt']" />
-                </div>
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <!-- Hero Section con búsqueda -->
+    <section class="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white py-16">
+      <div class="absolute inset-0 bg-black/10"></div>
+      <div class="container-custom relative z-10">
+        <div class="text-center mb-12">
+          <h1 class="text-4xl md:text-5xl font-display font-bold mb-4">
+            Encuentra el profesional perfecto
+          </h1>
+          <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+            Conectamos clientes con prestadores de servicios confiables en tu zona
+          </p>
+        </div>
+        
+        <!-- Formulario de búsqueda mejorado -->
+        <div class="max-w-4xl mx-auto">
+          <form @submit.prevent="realizarBusqueda" class="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl">
+            <div class="grid md:grid-cols-4 gap-4">
+              <!-- Ubicación -->
+              <div class="space-y-2">
+                <label for="location" class="block text-sm font-semibold text-gray-700">
+                  <font-awesome-icon :icon="['fas', 'map-marker-alt']" class="mr-2 text-blue-600" />
+                  Ubicación
+                </label>
                 <input 
                   type="text" 
-                  class="w-full pl-10 pr-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white/80" 
                   id="location" 
                   v-model="filtros.ubicacion"
                   placeholder="Ciudad, provincia..."
                 >
               </div>
-            </div>
-            <div>
-              <label for="category" class="block text-sm font-medium text-neutral-700 mb-1">Categoría</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-neutral-500">
-                  <font-awesome-icon :icon="['fas', 'th-large']" />
-                </div>
+              
+              <!-- Categoría -->
+              <div class="space-y-2">
+                <label for="category" class="block text-sm font-semibold text-gray-700">
+                  <font-awesome-icon :icon="['fas', 'th-large']" class="mr-2 text-blue-600" />
+                  Categoría
+                </label>
                 <select 
-                  class="w-full pl-10 pr-8 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors appearance-none" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white/80 appearance-none" 
                   id="category"
                   v-model="filtros.categoria"
                 >
@@ -39,19 +51,16 @@
                     {{ categoria.nombre }}
                   </option>
                 </select>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-neutral-500">
-                  <font-awesome-icon :icon="['fas', 'chevron-down']" />
-                </div>
               </div>
-            </div>
-            <div>
-              <label for="service" class="block text-sm font-medium text-neutral-700 mb-1">Servicio</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-neutral-500">
-                  <font-awesome-icon :icon="['fas', 'tools']" />
-                </div>
+              
+              <!-- Servicio -->
+              <div class="space-y-2">
+                <label for="service" class="block text-sm font-semibold text-gray-700">
+                  <font-awesome-icon :icon="['fas', 'tools']" class="mr-2 text-blue-600" />
+                  Servicio
+                </label>
                 <select 
-                  class="w-full pl-10 pr-8 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors appearance-none" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white/80 appearance-none" 
                   id="service"
                   v-model="filtros.servicio"
                 >
@@ -63,37 +72,43 @@
                     {{ servicio.nombre }}
                   </option>
                 </select>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-neutral-500">
-                  <font-awesome-icon :icon="['fas', 'chevron-down']" />
-                </div>
+              </div>
+              
+              <!-- Botón de búsqueda -->
+              <div class="flex items-end">
+                <button 
+                  type="submit" 
+                  class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  :disabled="loading"
+                >
+                  <span v-if="loading" class="mr-2">
+                    <font-awesome-icon :icon="['fas', 'spinner']" class="animate-spin" />
+                  </span>
+                  <font-awesome-icon v-else :icon="['fas', 'search']" class="mr-2" />
+                  {{ loading ? 'Buscando...' : 'Buscar' }}
+                </button>
               </div>
             </div>
-            <div class="flex items-end">
-              <button 
-                type="submit" 
-                class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center justify-center"
-                :disabled="loading"
-              >
-                <span v-if="loading" class="mr-2">
-                  <font-awesome-icon :icon="['fas', 'spinner']" class="animate-spin" />
-                </span>
-                <font-awesome-icon v-else :icon="['fas', 'search']" class="mr-2" />
-                {{ loading ? 'Buscando...' : 'Buscar' }}
-              </button>
-            </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </section>
 
-    <section class="py-10">
+    <!-- Contenido principal -->
+    <section class="py-12">
       <div class="container-custom">
         <!-- Estado de error -->
-        <div v-if="error" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6">
-          <p>{{ error }}</p>
+        <div v-if="error" class="bg-red-50 border-l-4 border-red-500 text-red-700 p-6 mb-8 rounded-r-xl">
+          <div class="flex items-center">
+            <font-awesome-icon :icon="['fas', 'exclamation-triangle']" class="text-red-500 mr-3" />
+            <div>
+              <h3 class="font-semibold">Error en la búsqueda</h3>
+              <p class="mt-1">{{ error }}</p>
+            </div>
+          </div>
           <button 
             @click="buscar"
-            class="mt-3 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors text-sm"
+            class="mt-4 bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors text-sm font-medium"
           >
             Intentar nuevamente
           </button>
@@ -101,27 +116,35 @@
 
         <!-- Estado de carga -->
         <div v-else-if="loading" class="py-20 text-center">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
-          <p class="mt-3 text-neutral-600">Buscando servicios...</p>
+          <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
+          <p class="mt-4 text-gray-600 text-lg">Buscando profesionales...</p>
         </div>
 
         <!-- Resultados -->
         <template v-else>
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <h2 class="text-2xl font-display font-bold text-neutral-900 mb-4 md:mb-0">
-              {{ resultados.length ? `${paginacion.totalResultados} resultados encontrados` : 'No se encontraron resultados' }}
-            </h2>
-            <div v-if="resultados.length">
+          <!-- Header de resultados -->
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+            <div>
+              <h2 class="text-3xl font-display font-bold text-gray-900 mb-2">
+                {{ resultados.length ? `${paginacion.totalResultados} profesionales encontrados` : 'No se encontraron resultados' }}
+              </h2>
+              <p v-if="resultados.length" class="text-gray-600">
+                Encuentra el profesional perfecto para tu proyecto
+              </p>
+            </div>
+            
+            <!-- Filtros de ordenamiento -->
+            <div v-if="resultados.length" class="mt-4 md:mt-0">
               <div class="relative">
                 <select 
                   v-model="filtros.ordenar"
-                  class="pl-3 pr-8 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors appearance-none text-sm" 
+                  class="pl-4 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 appearance-none bg-white shadow-sm" 
                 >
                   <option value="relevance">Relevancia</option>
                   <option value="rating">Mejor calificación</option>
                   <option value="newest">Más recientes</option>
                 </select>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none text-neutral-500">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
                   <font-awesome-icon :icon="['fas', 'chevron-down']" />
                 </div>
               </div>
@@ -129,130 +152,140 @@
           </div>
 
           <!-- Sin resultados -->
-          <div v-if="!resultados.length && !loading" class="text-center py-10">
-            <div class="text-neutral-400 mb-4">
-              <font-awesome-icon :icon="['fas', 'search']" class="text-5xl" />
+          <div v-if="!resultados.length && !loading" class="text-center py-16">
+            <div class="text-gray-300 mb-6">
+              <font-awesome-icon :icon="['fas', 'search']" class="text-8xl" />
             </div>
-            <h3 class="text-xl font-medium text-neutral-700 mb-2">No se encontraron resultados</h3>
-            <p class="text-neutral-500 mb-4">Prueba con otros términos de búsqueda o filtros diferentes.</p>
+            <h3 class="text-2xl font-semibold text-gray-700 mb-3">No se encontraron resultados</h3>
+            <p class="text-gray-500 mb-6 max-w-md mx-auto">
+              Prueba con otros términos de búsqueda o filtros diferentes. También puedes expandir tu búsqueda a áreas cercanas.
+            </p>
+            <button 
+              @click="limpiarFiltros"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium transition-colors"
+            >
+              Limpiar filtros
+            </button>
           </div>
 
-          <!-- Lista de resultados -->
-          <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Grid de resultados -->
+          <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div v-for="prestador in resultados" :key="prestador.id" class="group">
-              <div class="bg-white rounded-xl border border-neutral-200 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full p-5">
-                <h3 class="text-lg font-semibold text-neutral-900 mb-2">{{ prestador.nombre }}</h3>
-                <p class="flex items-center text-neutral-600 mb-2">
-                  <font-awesome-icon :icon="['fas', 'map-marker-alt']" class="mr-2 text-primary-500" />
-                  {{ prestador.ubicacion || 'Sin ubicación especificada' }}
-                </p>
-                <p class="mb-4">
-                  <span 
-                    v-for="(servicio, index) in prestador.servicios?.slice(0, 2)" 
-                    :key="index"
-                    class="inline-block px-2 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700 mr-2 mb-1"
-                  >
-                    {{ servicio.nombre }}
-                  </span>
-                  <span 
-                    v-if="prestador.servicios?.length > 2" 
-                    class="inline-block px-2 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700"
-                  >
-                    +{{ prestador.servicios.length - 2 }} más
-                  </span>
-                </p>
-                <div class="flex justify-between items-center">
-                  <div class="flex">
-                    <template v-for="n in 5" :key="n">
-                      <font-awesome-icon 
-                        :icon="['fas', 'star']" 
-                        :class="n <= Math.round(prestador.puntuacion || 0) ? 'text-yellow-500' : 'text-neutral-300'" 
-                      />
-                    </template>
+              <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 h-full overflow-hidden">
+                <!-- Header de la tarjeta -->
+                <div class="p-6 pb-4">
+                  <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                      <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                        {{ prestador.nombre_comercial }}
+                      </h3>
+                      <div class="flex items-center text-gray-600 mb-3">
+                        <font-awesome-icon :icon="['fas', 'map-marker-alt']" class="mr-2 text-blue-500 text-sm" />
+                        <span class="text-sm">{{ prestador.ubicacion || 'Sin ubicación especificada' }}</span>
+                      </div>
+                    </div>
+                    
+                    <!-- Plan badge -->
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {{ prestador.plan_nombre }}
+                    </span>
                   </div>
-                  <router-link 
-                    :to="`/prestador/${prestador.id}`" 
-                    class="px-3 py-1 border border-primary-600 text-primary-600 hover:bg-primary-50 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Ver detalles
-                  </router-link>
+                  
+                  <!-- Servicios -->
+                  <div class="mb-4">
+                    <div v-if="prestador.servicios && prestador.servicios.length > 0" class="flex flex-wrap gap-2">
+                      <span 
+                        v-for="(servicio, index) in prestador.servicios.slice(0, 3)" 
+                        :key="index"
+                        class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+                      >
+                        {{ servicio.nombre }}
+                      </span>
+                      <span 
+                        v-if="prestador.servicios.length > 3" 
+                        class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-600"
+                      >
+                        +{{ prestador.servicios.length - 3 }} más
+                      </span>
+                    </div>
+                    <div v-else class="text-sm text-gray-500 italic">
+                      Sin servicios registrados
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Footer de la tarjeta -->
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
+                  <div class="flex justify-between items-center">
+                    <!-- Calificación -->
+                    <div class="flex items-center">
+                      <div class="flex mr-2">
+                        <template v-for="n in 5" :key="n">
+                          <font-awesome-icon 
+                            :icon="['fas', 'star']" 
+                            :class="n <= Math.round(prestador.puntuacion || 0) ? 'text-yellow-400' : 'text-gray-300'" 
+                            class="text-sm"
+                          />
+                        </template>
+                      </div>
+                      <span class="text-sm text-gray-600">
+                        {{ prestador.puntuacion > 0 ? prestador.puntuacion.toFixed(1) : 'Sin calificaciones' }}
+                      </span>
+                    </div>
+                    
+                    <!-- Botón de acción -->
+                    <router-link 
+                      :to="`/prestador/${prestador.id}`" 
+                      class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
+                    >
+                      Ver perfil
+                      <font-awesome-icon :icon="['fas', 'arrow-right']" class="ml-2 text-xs" />
+                    </router-link>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </template>
 
-        <!-- Paginación -->
-        <nav v-if="resultados.length && paginacion.totalPaginas > 1" class="mt-10">
-          <ul class="flex justify-center">
-            <li>
+        <!-- Paginación mejorada -->
+        <nav v-if="resultados.length && paginacion.totalPaginas > 1" class="mt-16">
+          <div class="flex justify-center">
+            <div class="flex items-center space-x-2 bg-white rounded-xl shadow-sm border border-gray-200 p-2">
+              <!-- Botón anterior -->
               <button 
                 @click="irAPagina(paginacion.pagina - 1)"
-                class="flex items-center justify-center w-10 h-10 rounded-l-lg border border-neutral-300 bg-white" 
-                :class="paginacion.pagina <= 1 ? 'text-neutral-400 cursor-not-allowed' : 'text-neutral-700 hover:bg-neutral-50'"
+                class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-colors" 
+                :class="paginacion.pagina <= 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:border-blue-500'"
                 :disabled="paginacion.pagina <= 1"
                 type="button"
               >
                 <font-awesome-icon :icon="['fas', 'chevron-left']" />
               </button>
-            </li>
-            
-            <!-- Primera página -->
-            <li v-if="paginacion.pagina > 3">
-              <button 
-                @click="irAPagina(1)"
-                class="flex items-center justify-center w-10 h-10 border-t border-b border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700"
-                type="button"
-              >1</button>
-            </li>
-            
-            <!-- Ellipsis al inicio -->
-            <li v-if="paginacion.pagina > 4">
-              <span class="flex items-center justify-center w-10 h-10 border-t border-b border-neutral-300 bg-white text-neutral-400">
-                ...
-              </span>
-            </li>
-            
-            <!-- Páginas cercanas a la actual -->
-            <template v-for="n in paginacion.totalPaginas" :key="n">
-              <li v-if="n >= Math.max(1, paginacion.pagina - 2) && n <= Math.min(paginacion.totalPaginas, paginacion.pagina + 2)">
+              
+              <!-- Páginas -->
+              <template v-for="n in paginacion.totalPaginas" :key="n">
                 <button 
+                  v-if="n >= Math.max(1, paginacion.pagina - 2) && n <= Math.min(paginacion.totalPaginas, paginacion.pagina + 2)"
                   @click="irAPagina(n)"
-                  class="flex items-center justify-center w-10 h-10 border-t border-b border-neutral-300" 
-                  :class="n === paginacion.pagina ? 'bg-primary-600 text-white' : 'bg-white hover:bg-neutral-50 text-neutral-700'"
+                  class="flex items-center justify-center w-10 h-10 rounded-lg font-medium transition-colors" 
+                  :class="n === paginacion.pagina ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300'"
                   type="button"
                 >{{ n }}</button>
-              </li>
-            </template>
-            
-            <!-- Ellipsis al final -->
-            <li v-if="paginacion.pagina < paginacion.totalPaginas - 3">
-              <span class="flex items-center justify-center w-10 h-10 border-t border-b border-neutral-300 bg-white text-neutral-400">
-                ...
-              </span>
-            </li>
-            
-            <!-- Última página -->
-            <li v-if="paginacion.pagina < paginacion.totalPaginas - 2">
-              <button 
-                @click="irAPagina(paginacion.totalPaginas)"
-                class="flex items-center justify-center w-10 h-10 border-t border-b border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700"
-                type="button"
-              >{{ paginacion.totalPaginas }}</button>
-            </li>
-            
-            <li>
+              </template>
+              
+              <!-- Botón siguiente -->
               <button 
                 @click="irAPagina(paginacion.pagina + 1)"
-                class="flex items-center justify-center w-10 h-10 rounded-r-lg border border-neutral-300 bg-white" 
-                :class="paginacion.pagina >= paginacion.totalPaginas ? 'text-neutral-400 cursor-not-allowed' : 'text-neutral-700 hover:bg-neutral-50'"
+                class="flex items-center justify-center w-10 h-10 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-colors" 
+                :class="paginacion.pagina >= paginacion.totalPaginas ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:border-blue-500'"
                 :disabled="paginacion.pagina >= paginacion.totalPaginas"
                 type="button"
               >
                 <font-awesome-icon :icon="['fas', 'chevron-right']" />
               </button>
-            </li>
-          </ul>
+            </div>
+          </div>
         </nav>
       </div>
     </section>
@@ -276,11 +309,20 @@ const {
   categorias, 
   serviciosFiltrados,
   buscar, 
-  cambiarPagina 
+  cambiarPagina,
+  cargarCategorias,
+  cargarServicios,
+  limpiarFiltros
 } = searchStore;
 
 // Manejar la búsqueda inicial y cambios en la URL
-onMounted(() => {
+onMounted(async () => {
+  // Cargar datos iniciales
+  await Promise.all([
+    cargarCategorias(),
+    cargarServicios()
+  ]);
+  
   // Sincronizar filtros con parámetros de URL
   const params = route.query;
   
@@ -337,5 +379,8 @@ function irAPagina(pagina) {
 </script>
 
 <style scoped>
-/* Todos los estilos ahora están en las clases de Tailwind */
+/* Estilos adicionales si es necesario */
+.container-custom {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
 </style>
