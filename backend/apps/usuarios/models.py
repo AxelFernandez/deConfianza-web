@@ -17,15 +17,40 @@ class Perfil(models.Model):
     ciudad = models.CharField(max_length=100, blank=True)
     provincia = models.CharField(max_length=100, blank=True)
     pais = models.CharField(max_length=100, default="Argentina")
+    # Ubicación geográfica
+    latitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitud = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    sitio_web = models.URLField(blank=True, help_text="Sitio web del prestador")
+    descripcion = models.TextField(blank=True, help_text="Descripción del prestador")
     es_prestador = models.BooleanField(default=False)
     # Categoría y rubro para prestadores
     categoria = models.ForeignKey('servicios.Categoria', on_delete=models.SET_NULL, null=True, blank=True)
     rubro = models.ForeignKey('servicios.Rubro', on_delete=models.SET_NULL, null=True, blank=True)
-    plan = models.ForeignKey('Plan', on_delete=models.SET_NULL, null=True, blank=True, help_text="Plan de suscripción del usuario")
     onboarding_completed = models.BooleanField(default=False)
     # Campo para identificar cuentas vinculadas a redes sociales
     social_id = models.CharField(max_length=255, blank=True, null=True, help_text="ID de la cuenta social (Google, Facebook, etc.)")
     social_provider = models.CharField(max_length=50, blank=True, null=True, help_text="Proveedor social (google, facebook, etc.)")
+
+    @property
+    def plan(self):
+        """Obtiene el plan actual del usuario basado en su suscripción activa"""
+        from apps.suscripciones.models import Suscripcion
+        
+        # Buscar suscripción activa y vigente
+        suscripcion_activa = self.usuario.suscripciones.filter(
+            activa=True,
+            estado='approved'
+        ).first()
+        
+        if suscripcion_activa and suscripcion_activa.esta_vigente:
+            return suscripcion_activa.plan
+        
+        # Si no hay suscripción activa, intentar obtener plan gratuito
+        try:
+            plan_free = Plan.objects.get(code='free', is_active=True)
+            return plan_free
+        except Plan.DoesNotExist:
+            return None
 
 
 class Plan(models.Model):

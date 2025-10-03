@@ -36,6 +36,11 @@ const fullRoutes = [
     component: () => import('../views/LoginView.vue')
   },
   {
+    path: '/planes',
+    name: 'planes',
+    component: () => import('../views/PlanesView.vue')
+  },
+  {
     path: '/onboarding',
     name: 'onboarding',
     component: () => import('../views/OnboardingView.vue'),
@@ -94,7 +99,43 @@ const fullRoutes = [
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: isLandingOnlyMode ? baseRoutes : fullRoutes
+  routes: isLandingOnlyMode ? baseRoutes : fullRoutes,
+  scrollBehavior(to, from, savedPosition) {
+    // Si el navegador tiene una posición guardada (ej: botón atrás), usarla
+    if (savedPosition) {
+      return savedPosition
+    }
+    
+    // Si hay un hash en la URL, scroll a ese elemento
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth'
+      }
+    }
+    
+    // Casos especiales donde podríamos NO querer resetear el scroll
+    const keepScrollRoutes = [
+      // Agregar rutas aquí si en el futuro queremos mantener el scroll
+      // Ejemplo: 'prestadorServicios' -> 'prestadorPerfil' (tabs del dashboard)
+    ]
+    
+    // Si estamos navegando entre rutas que deberían mantener scroll
+    if (keepScrollRoutes.includes(to.name) && keepScrollRoutes.includes(from.name)) {
+      return {} // No cambiar scroll
+    }
+    
+    // Para todas las otras navegaciones, ir al top de la página con animación suave
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          top: 0,
+          left: 0,
+          behavior: 'smooth'
+        })
+      }, 100) // Pequeño delay para asegurar que el componente se haya montado
+    })
+  }
 })
 
 // Protección de rutas

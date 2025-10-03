@@ -1,435 +1,181 @@
 <template>
-  <div class="min-h-screen bg-neutral-50">
-    <!-- Header con breadcrumb -->
-    <header class="bg-white shadow-sm border-b border-neutral-200">
-      <div class="container-custom py-6">
-        <div class="flex items-center space-x-2 text-sm text-neutral-600 mb-2">
-          <router-link to="/prestador/dashboard" class="hover:text-primary-600">Dashboard</router-link>
-          <span>/</span>
-          <span class="text-neutral-900">Configuración</span>
+  <PrestadorLayout 
+    title="Configuración" 
+    subtitle="Ajusta las preferencias de tu cuenta"
+    breadcrumb="Configuración"
+    :plan-name="dashboardData?.plan?.name"
+    :dashboard-data="dashboardData"
+    @logout="authStore.logout"
+  >
+    <div class="space-y-6">
+      <!-- Información de la cuenta -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
+          <h2 class="text-xl font-bold text-gray-900">Información de la Cuenta</h2>
+          <p class="text-sm text-gray-600 mt-1">Datos básicos de tu perfil</p>
         </div>
-        <h1 class="text-2xl font-bold text-neutral-900">Configuración</h1>
-        <p class="text-neutral-600 mt-1">Gestiona la configuración de tu cuenta y preferencias</p>
+        <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between py-3 border-b border-gray-100">
+            <div>
+              <p class="text-sm text-gray-600">Nombre de usuario</p>
+              <p class="font-semibold text-gray-900">{{ authStore.user?.username }}</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between py-3 border-b border-gray-100">
+            <div>
+              <p class="text-sm text-gray-600">Email</p>
+              <p class="font-semibold text-gray-900">{{ authStore.user?.email }}</p>
+            </div>
+          </div>
+          <div class="flex items-center justify-between py-3">
+            <div>
+              <p class="text-sm text-gray-600">Nombre completo</p>
+              <p class="font-semibold text-gray-900">
+                {{ authStore.user?.first_name }} {{ authStore.user?.last_name }}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
-    </header>
-    
-    <!-- Contenido principal -->
-    <div class="container-custom py-8">
-      <div class="grid md:grid-cols-4 gap-6">
-        <!-- Menú lateral -->
-        <div class="md:col-span-1">
-          <DashboardNavigation />
+
+      <!-- Plan actual -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-blue-100">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold text-gray-900">Tu Plan</h2>
+              <p class="text-sm text-gray-600 mt-1">Gestiona tu suscripción</p>
+            </div>
+            <router-link 
+              to="/planes"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Ver Planes
+            </router-link>
+          </div>
         </div>
-        
-        <!-- Contenido -->
-        <div class="md:col-span-3">
-          <!-- Loading state -->
-          <div v-if="loading" class="bg-white rounded-lg shadow-sm border border-neutral-100 p-8">
-            <div class="flex items-center justify-center">
-              <font-awesome-icon :icon="['fas', 'spinner']" class="text-primary-600 text-2xl animate-spin mr-3" />
-              <span class="text-neutral-600">Cargando configuración...</span>
+        <div class="p-6">
+          <div v-if="loadingDashboard" class="text-center py-8">
+            <font-awesome-icon :icon="['fas', 'spinner']" class="text-blue-600 text-3xl animate-spin" />
+          </div>
+          <div v-else-if="dashboardData?.plan" class="flex items-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white">
+            <div class="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center mr-6">
+              <font-awesome-icon :icon="['fas', 'crown']" class="text-3xl" />
+            </div>
+            <div class="flex-1">
+              <h3 class="text-2xl font-bold mb-2">{{ dashboardData.plan.name }}</h3>
+              <div class="grid grid-cols-2 gap-4 text-sm opacity-90">
+                <div>
+                  <p class="mb-1">✓ {{ dashboardData.plan.max_servicios }} servicios</p>
+                  <p>✓ {{ dashboardData.plan.max_images }} imágenes</p>
+                </div>
+                <div>
+                  <p class="mb-1">✓ {{ dashboardData.plan.max_videos }} videos</p>
+                  <p>✓ {{ dashboardData.plan.fields_enabled?.length || 0 }} campos</p>
+                </div>
+              </div>
+            </div>
+            <div class="text-right">
+              <p class="text-3xl font-bold">{{ dashboardData.plan.price_text }}</p>
+              <p class="text-sm opacity-90" v-if="dashboardData.plan.precio_mensual > 0">/mes</p>
             </div>
           </div>
+        </div>
+      </div>
 
-          <!-- Contenido principal -->
-          <div v-else class="space-y-6">
-            
-            <!-- Sección de seguridad -->
-            <div class="bg-white rounded-lg shadow-sm border border-neutral-100 overflow-hidden">
-              <div class="bg-gradient-to-r from-red-50 to-orange-50 border-b border-red-100 p-6">
-                <div class="flex items-center">
-                  <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                    <font-awesome-icon :icon="['fas', 'shield-alt']" class="text-red-600" />
-                  </div>
-                  <div>
-                    <h2 class="text-xl font-semibold text-neutral-900">Seguridad de la cuenta</h2>
-                    <p class="text-sm text-neutral-600">Gestiona la seguridad y acceso a tu cuenta</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="p-6">
-                <!-- Información de la cuenta -->
-                <div class="mb-6">
-                  <h3 class="text-lg font-medium text-neutral-900 mb-4">Información de la cuenta</h3>
-                  <div class="grid md:grid-cols-2 gap-4">
-                    
-                    <!-- Tipo de cuenta -->
-                    <div class="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
-                      <div class="flex items-center">
-                        <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                          <font-awesome-icon :icon="['fas', isGoogleAccount ? 'google' : 'user']" class="text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 class="font-medium text-neutral-900">Tipo de cuenta</h4>
-                          <p class="text-sm text-neutral-600 mt-1">
-                            {{ isGoogleAccount ? 'Cuenta vinculada a Google' : 'Cuenta local' }}
-                          </p>
-                          <span 
-                            class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mt-2"
-                            :class="isGoogleAccount ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'"
-                          >
-                            <font-awesome-icon :icon="['fas', isGoogleAccount ? 'check-circle' : 'user-circle']" class="mr-1" />
-                            {{ isGoogleAccount ? 'Google' : 'Local' }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <!-- Email -->
-                    <div class="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
-                      <div class="flex items-center">
-                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                          <font-awesome-icon :icon="['fas', 'envelope']" class="text-green-600" />
-                        </div>
-                        <div>
-                          <h4 class="font-medium text-neutral-900">Email</h4>
-                          <p class="text-sm text-neutral-600 mt-1">{{ authStore.user?.email || 'No especificado' }}</p>
-                          <p class="text-xs text-neutral-500 mt-1">
-                            {{ isGoogleAccount ? 'Verificado por Google' : 'Verificar email' }}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Cambio de contraseña -->
-                <div v-if="!isGoogleAccount">
-                  <h3 class="text-lg font-medium text-neutral-900 mb-4">Cambiar contraseña</h3>
-                  <div class="bg-white border border-neutral-200 rounded-lg p-6">
-                    <form @submit.prevent="changePassword" class="space-y-4">
-                      <!-- Contraseña actual -->
-                      <div>
-                        <label class="block text-sm font-medium text-neutral-700 mb-1">
-                          Contraseña actual
-                        </label>
-                        <div class="relative">
-                          <input 
-                            v-model="passwordForm.currentPassword"
-                            :type="showCurrentPassword ? 'text' : 'password'"
-                            class="w-full px-3 py-2 pr-10 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            placeholder="Ingresa tu contraseña actual"
-                            required
-                          />
-                          <button 
-                            type="button"
-                            @click="showCurrentPassword = !showCurrentPassword"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          >
-                            <font-awesome-icon 
-                              :icon="['fas', showCurrentPassword ? 'eye-slash' : 'eye']" 
-                              class="text-neutral-400 hover:text-neutral-600"
-                            />
-                          </button>
-                        </div>
-                      </div>
-
-                      <!-- Nueva contraseña -->
-                      <div>
-                        <label class="block text-sm font-medium text-neutral-700 mb-1">
-                          Nueva contraseña
-                        </label>
-                        <div class="relative">
-                          <input 
-                            v-model="passwordForm.newPassword"
-                            :type="showNewPassword ? 'text' : 'password'"
-                            class="w-full px-3 py-2 pr-10 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            placeholder="Ingresa tu nueva contraseña"
-                            required
-                            minlength="8"
-                          />
-                          <button 
-                            type="button"
-                            @click="showNewPassword = !showNewPassword"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          >
-                            <font-awesome-icon 
-                              :icon="['fas', showNewPassword ? 'eye-slash' : 'eye']" 
-                              class="text-neutral-400 hover:text-neutral-600"
-                            />
-                          </button>
-                        </div>
-                        <p class="text-xs text-neutral-500 mt-1">Mínimo 8 caracteres</p>
-                      </div>
-
-                      <!-- Confirmar contraseña -->
-                      <div>
-                        <label class="block text-sm font-medium text-neutral-700 mb-1">
-                          Confirmar nueva contraseña
-                        </label>
-                        <div class="relative">
-                          <input 
-                            v-model="passwordForm.confirmPassword"
-                            :type="showConfirmPassword ? 'text' : 'password'"
-                            class="w-full px-3 py-2 pr-10 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            placeholder="Confirma tu nueva contraseña"
-                            required
-                            minlength="8"
-                          />
-                          <button 
-                            type="button"
-                            @click="showConfirmPassword = !showConfirmPassword"
-                            class="absolute inset-y-0 right-0 pr-3 flex items-center"
-                          >
-                            <font-awesome-icon 
-                              :icon="['fas', showConfirmPassword ? 'eye-slash' : 'eye']" 
-                              class="text-neutral-400 hover:text-neutral-600"
-                            />
-                          </button>
-                        </div>
-                        <p 
-                          v-if="passwordForm.newPassword && passwordForm.confirmPassword"
-                          class="text-xs mt-1"
-                          :class="passwordsMatch ? 'text-green-600' : 'text-red-600'"
-                        >
-                          <font-awesome-icon 
-                            :icon="['fas', passwordsMatch ? 'check' : 'times']" 
-                            class="mr-1"
-                          />
-                          {{ passwordsMatch ? 'Las contraseñas coinciden' : 'Las contraseñas no coinciden' }}
-                        </p>
-                      </div>
-
-                      <!-- Botones -->
-                      <div class="flex justify-end space-x-3 pt-4">
-                        <button 
-                          type="button"
-                          @click="resetPasswordForm"
-                          class="px-4 py-2 text-sm text-neutral-600 hover:text-neutral-800 border border-neutral-300 rounded-md hover:bg-neutral-50 transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                        <button 
-                          type="submit"
-                          :disabled="!canSubmitPassword || changingPassword"
-                          class="px-4 py-2 text-sm bg-primary-600 hover:bg-primary-700 text-white rounded-md transition-colors disabled:bg-neutral-400 disabled:cursor-not-allowed"
-                        >
-                          <font-awesome-icon 
-                            v-if="changingPassword" 
-                            :icon="['fas', 'spinner']" 
-                            class="animate-spin mr-2" 
-                          />
-                          {{ changingPassword ? 'Cambiando...' : 'Cambiar contraseña' }}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-
-                <!-- Mensaje para cuentas de Google -->
-                <div v-else class="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <div class="flex items-start">
-                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                      <font-awesome-icon :icon="['fab', 'google']" class="text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 class="font-medium text-blue-900 mb-2">Cuenta vinculada a Google</h4>
-                      <p class="text-sm text-blue-700 mb-3">
-                        Tu cuenta está vinculada a Google. Para cambiar tu contraseña, debes hacerlo desde tu cuenta de Google.
-                      </p>
-                      <div class="flex space-x-3">
-                        <a 
-                          href="https://myaccount.google.com/security"
-                          target="_blank"
-                          class="inline-flex items-center px-3 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-                        >
-                          <font-awesome-icon :icon="['fab', 'google']" class="mr-2" />
-                          Ir a Google Account
-                        </a>
-                        <button 
-                          @click="showGoogleInfo = !showGoogleInfo"
-                          class="inline-flex items-center px-3 py-2 text-sm text-blue-600 hover:text-blue-800 border border-blue-300 rounded-md hover:bg-blue-50 transition-colors"
-                        >
-                          <font-awesome-icon :icon="['fas', 'info-circle']" class="mr-2" />
-                          Más información
-                        </button>
-                      </div>
-                      
-                      <!-- Información adicional -->
-                      <div v-if="showGoogleInfo" class="mt-4 p-3 bg-blue-100 rounded-md">
-                        <h5 class="font-medium text-blue-900 mb-2">¿Por qué no puedo cambiar mi contraseña aquí?</h5>
-                        <ul class="text-xs text-blue-700 space-y-1">
-                          <li>• Tu cuenta está vinculada a Google para mayor seguridad</li>
-                          <li>• Google maneja la autenticación y seguridad de tu cuenta</li>
-                          <li>• Puedes gestionar tu contraseña desde tu cuenta de Google</li>
-                          <li>• Esto te permite usar la misma contraseña en otros servicios de Google</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+      <!-- Preferencias -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
+          <h2 class="text-xl font-bold text-gray-900">Preferencias</h2>
+          <p class="text-sm text-gray-600 mt-1">Ajusta la configuración de tu perfil</p>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="flex items-center justify-between py-3 border-b border-gray-100">
+            <div>
+              <p class="font-semibold text-gray-900">Notificaciones por email</p>
+              <p class="text-sm text-gray-600">Recibe actualizaciones en tu correo</p>
             </div>
-
-            <!-- Sección de notificaciones (placeholder) -->
-            <div class="bg-white rounded-lg shadow-sm border border-neutral-100 overflow-hidden">
-              <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-6">
-                <div class="flex items-center">
-                  <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                    <font-awesome-icon :icon="['fas', 'bell']" class="text-blue-600" />
-                  </div>
-                  <div>
-                    <h2 class="text-xl font-semibold text-neutral-900">Notificaciones</h2>
-                    <p class="text-sm text-neutral-600">Configura cómo y cuándo recibir notificaciones</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="p-6">
-                <div class="text-center py-8">
-                  <font-awesome-icon :icon="['fas', 'bell-slash']" class="text-4xl text-neutral-400 mb-4" />
-                  <h3 class="text-lg font-medium text-neutral-900 mb-2">Configuración de notificaciones</h3>
-                  <p class="text-neutral-600">Esta funcionalidad estará disponible próximamente.</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Sección de privacidad (placeholder) -->
-            <div class="bg-white rounded-lg shadow-sm border border-neutral-100 overflow-hidden">
-              <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-100 p-6">
-                <div class="flex items-center">
-                  <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                    <font-awesome-icon :icon="['fas', 'user-shield']" class="text-green-600" />
-                  </div>
-                  <div>
-                    <h2 class="text-xl font-semibold text-neutral-900">Privacidad</h2>
-                    <p class="text-sm text-neutral-600">Gestiona tu privacidad y datos personales</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="p-6">
-                <div class="text-center py-8">
-                  <font-awesome-icon :icon="['fas', 'user-shield']" class="text-4xl text-neutral-400 mb-4" />
-                  <h3 class="text-lg font-medium text-neutral-900 mb-2">Configuración de privacidad</h3>
-                  <p class="text-neutral-600">Esta funcionalidad estará disponible próximamente.</p>
-                </div>
-              </div>
-            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer" checked>
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
           </div>
+          <div class="flex items-center justify-between py-3 border-b border-gray-100">
+            <div>
+              <p class="font-semibold text-gray-900">Perfil público</p>
+              <p class="text-sm text-gray-600">Mostrar tu perfil en búsquedas</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" class="sr-only peer" checked>
+              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zona de peligro -->
+      <div class="bg-white rounded-xl shadow-sm border-2 border-red-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-red-50 to-pink-50 p-6 border-b border-red-200">
+          <h2 class="text-xl font-bold text-red-900">Zona de Peligro</h2>
+          <p class="text-sm text-red-700 mt-1">Acciones irreversibles</p>
+        </div>
+        <div class="p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-semibold text-gray-900">Eliminar cuenta</p>
+              <p class="text-sm text-gray-600">Esta acción no se puede deshacer</p>
+            </div>
+            <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+              Eliminar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sesión -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
+          <h2 class="text-xl font-bold text-gray-900">Sesión</h2>
+          <p class="text-sm text-gray-600 mt-1">Gestiona tu sesión actual</p>
+        </div>
+        <div class="p-6">
+          <button 
+            @click="authStore.logout"
+            class="w-full flex items-center justify-center px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+          >
+            <font-awesome-icon :icon="['fas', 'sign-out-alt']" class="mr-2" />
+            Cerrar Sesión
+          </button>
         </div>
       </div>
     </div>
-  </div>
+  </PrestadorLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../../stores/authStore';
-import DashboardNavigation from '../../components/DashboardNavigation.vue';
+import { misServiciosService } from '../../services/api';
+import PrestadorLayout from '../../components/PrestadorLayout.vue';
 
 const authStore = useAuthStore();
 
-// Estado del componente
-const loading = ref(true);
-const changingPassword = ref(false);
-const showGoogleInfo = ref(false);
+const dashboardData = ref(null);
+const loadingDashboard = ref(false);
 
-// Estados para mostrar/ocultar contraseñas
-const showCurrentPassword = ref(false);
-const showNewPassword = ref(false);
-const showConfirmPassword = ref(false);
-
-// Formulario de cambio de contraseña
-const passwordForm = ref({
-  currentPassword: '',
-  newPassword: '',
-  confirmPassword: ''
-});
-
-// Computed para verificar si es cuenta de Google
-const isGoogleAccount = computed(() => {
-  // Verificar si el usuario se registró con Google
-  return authStore.user?.perfil?.is_google_user || false;
-});
-
-// Computed para verificar si las contraseñas coinciden
-const passwordsMatch = computed(() => {
-  return passwordForm.value.newPassword === passwordForm.value.confirmPassword && 
-         passwordForm.value.newPassword.length >= 8;
-});
-
-// Computed para verificar si se puede enviar el formulario
-const canSubmitPassword = computed(() => {
-  return passwordForm.value.currentPassword &&
-         passwordForm.value.newPassword &&
-         passwordForm.value.confirmPassword &&
-         passwordsMatch.value &&
-         passwordForm.value.newPassword.length >= 8;
-});
-
-// Función para resetear el formulario de contraseña
-const resetPasswordForm = () => {
-  passwordForm.value = {
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  };
-  showCurrentPassword.value = false;
-  showNewPassword.value = false;
-  showConfirmPassword.value = false;
-};
-
-// Función para cambiar contraseña
-const changePassword = async () => {
-  if (!canSubmitPassword.value) return;
-  
+async function loadDashboard() {
+  loadingDashboard.value = true;
   try {
-    changingPassword.value = true;
-    
-    const { authService } = await import('../../services/api');
-    
-    await authService.changePassword({
-      current_password: passwordForm.value.currentPassword,
-      new_password: passwordForm.value.newPassword,
-      confirm_password: passwordForm.value.confirmPassword
-    });
-    
-    // Mostrar mensaje de éxito
-    alert('Contraseña cambiada exitosamente');
-    
-    // Resetear formulario
-    resetPasswordForm();
-    
+    const response = await misServiciosService.getDashboard();
+    dashboardData.value = response.data;
   } catch (error) {
-    console.error('Error cambiando contraseña:', error);
-    
-    if (error.response?.data) {
-      const errorData = error.response.data;
-      if (errorData.current_password) {
-        alert('Contraseña actual incorrecta');
-      } else if (errorData.new_password) {
-        alert('Nueva contraseña inválida: ' + errorData.new_password.join(', '));
-      } else {
-        alert('Error al cambiar contraseña: ' + JSON.stringify(errorData));
-      }
-    } else {
-      alert('Error al cambiar la contraseña. Inténtalo de nuevo.');
-    }
+    console.error('Error:', error);
   } finally {
-    changingPassword.value = false;
+    loadingDashboard.value = false;
   }
-};
-
-// Cargar datos iniciales
-const loadData = async () => {
-  try {
-    loading.value = true;
-    // Aquí podrías cargar configuraciones adicionales si las hay
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simular carga
-  } catch (error) {
-    console.error('Error cargando configuración:', error);
-  } finally {
-    loading.value = false;
-  }
-};
+}
 
 onMounted(() => {
-  loadData();
+  loadDashboard();
 });
 </script>
-
-<style scoped>
-/* Todos los estilos están en las clases de Tailwind */
-</style>

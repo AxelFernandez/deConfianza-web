@@ -222,26 +222,22 @@
                   <div>
                     <label class="block text-sm font-medium text-neutral-700 mb-1 flex items-center">
                       Teléfono (opcional)
-                      <span v-if="!isFieldEnabled('telefono')" class="ml-2 text-xs text-neutral-500">(bloqueado por plan)</span>
                     </label>
                     <input 
                       type="tel" 
                       v-model="profileData.telefono"
-                      :disabled="!isFieldEnabled('telefono')"
-                      class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors disabled:bg-neutral-100 disabled:text-neutral-500" 
+                      class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors" 
                       placeholder="Teléfono de contacto"
                     />
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-neutral-700 mb-1 flex items-center">
                       Ciudad
-                      <span v-if="!isFieldEnabled('ciudad')" class="ml-2 text-xs text-neutral-500" title="Disponible en planes superiores">(bloqueado por plan)</span>
                     </label>
                     <input 
                       type="text" 
                       v-model="profileData.ciudad"
-                      :disabled="!isFieldEnabled('ciudad')"
-                      class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors disabled:bg-neutral-100 disabled:text-neutral-500" 
+                      class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors" 
                       placeholder="Tu ciudad"
                     />
                   </div>
@@ -546,7 +542,7 @@
               @click="goToDashboard" 
               class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
             >
-              Ir al panel
+              {{ userType === 'prestador' ? 'Ir al panel' : 'Comenzar a buscar servicios' }}
             </button>
           </div>
         </div>
@@ -632,6 +628,7 @@ onMounted(async () => {
       maxImages: typeof p.max_images === 'number' ? p.max_images : 0,
       maxVideos: typeof p.max_videos === 'number' ? p.max_videos : 0,
     }));
+    
   } catch (e) {
     console.error('Error cargando planes:', e);
     loadError.value = 'No se pudieron cargar los planes';
@@ -665,6 +662,8 @@ const selectedRubroName = computed(() => {
   const rubro = rubros.value.find(r => r.id === selectedRubro.value);
   return rubro ? rubro.name : '';
 });
+
+// Función removida: Ya no usamos preselección de planes
 
 async function loadCatalog() {
   try {
@@ -824,13 +823,17 @@ function goToDashboard() {
   if (userType.value === 'prestador') {
     router.push('/prestador/dashboard');
   } else {
-    router.push('/');
+    // Para clientes, verificar si existe un panel específico o redirigir a búsqueda
+    router.push('/buscar');
   }
 }
 
 // Helpers
 function isFieldEnabled(fieldName) {
-  // Busca el plan seleccionado y revisa fieldsEnabled
+  // Si el usuario es cliente, todos los campos están habilitados
+  if (userType.value === 'cliente') return true;
+  
+  // Para prestadores, verificar según el plan
   const plan = subscriptionPlans.value.find(p => p.code === selectedPlan.value) || null;
   if (!plan) return false;
   if (!Array.isArray(plan.fieldsEnabled)) return false;
@@ -903,6 +906,15 @@ watch(() => selectedPlan.value, () => {
 watch(() => selectedCategory.value, () => {
   // Si cambia la categoría, resetear el rubro seleccionado
   selectedRubro.value = null;
+});
+
+// Cuando cambia el tipo de usuario (cliente/prestador), resetear las restricciones
+watch(() => userType.value, () => {
+  // Si cambia a cliente, asegurarse de que no haya campos bloqueados
+  if (userType.value === 'cliente') {
+    // Establecer un plan gratuito por defecto para clientes
+    selectedPlan.value = 'free';
+  }
 });
 
 // Formatear precio por mes si falta el sufijo

@@ -150,9 +150,15 @@ async function login() {
   const success = await authStore.login(credentials);
   
   if (success) {
-    // Dejar que el router maneje las redirecciones basado en onboarding_completed
-    const redirectTo = router.currentRoute.value.query.redirect || '/';
-    router.push(redirectTo);
+    // Verificar si el usuario ha completado el onboarding
+    if (authStore.user?.perfil?.onboarding_completed) {
+      // Si ya completó el onboarding, redirigir a la página solicitada o al dashboard
+      const redirectTo = router.currentRoute.value.query.redirect || '/';
+      router.push(redirectTo);
+    } else {
+      // Si no ha completado el onboarding, redirigir a la página de onboarding
+      router.push('/onboarding');
+    }
   } else {
     // Si hubo error, mostrar mensaje
     errorMessage.value = authStore.error || 'Error al iniciar sesión';
@@ -178,9 +184,15 @@ async function loginWithGoogle() {
     const ok = await authStore.loginWithGoogle(credential);
     
     if (ok) {
-      // Dejar que el router maneje las redirecciones
-      const redirectTo = router.currentRoute.value.query.redirect || '/';
-      router.push(redirectTo);
+      // Verificar si el usuario ha completado el onboarding
+      if (authStore.user?.perfil?.onboarding_completed) {
+        // Si ya completó el onboarding, redirigir a la página solicitada o al dashboard
+        const redirectTo = router.currentRoute.value.query.redirect || '/';
+        router.push(redirectTo);
+      } else {
+        // Si no ha completado el onboarding, redirigir a la página de onboarding
+        router.push('/onboarding');
+      }
     } else {
       errorMessage.value = authStore.error || 'Error al iniciar sesión con Google';
     }

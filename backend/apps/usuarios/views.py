@@ -93,19 +93,39 @@ class UserViewSet(viewsets.ModelViewSet):
         if es_prestador is not None:
             perfil.es_prestador = bool(es_prestador)
         if plan:
-            perfil.plan = plan
+            # Buscar la instancia del Plan por su código
+            from .models import Plan
+            from apps.suscripciones.models import Suscripcion
+            from django.utils import timezone
+            from datetime import timedelta
+            
+            plan_obj = Plan.objects.filter(code=plan).first()
+            if plan_obj:
+                # Crear suscripción activa en lugar de asignar directamente
+                suscripcion, created = Suscripcion.objects.get_or_create(
+                    usuario=request.user,
+                    plan=plan_obj,
+                    estado='approved',
+                    activa=True,
+                    defaults={
+                        'monto': plan_obj.precio_mensual,
+                        'fecha_inicio': timezone.now(),
+                        'fecha_fin': timezone.now() + timedelta(days=30),
+                        'fecha_pago': timezone.now(),
+                    }
+                )
         
         # Actualizar datos del perfil si se proporcionan
         if perfil_data:
-            # Validar campos permitidos por plan si es prestador
-            if perfil.es_prestador and plan:
-                from .models import Plan
-                plan_obj = Plan.objects.filter(code=plan).first()
-                if plan_obj and isinstance(plan_obj.fields_enabled, list):
-                    allowed_fields = plan_obj.fields_enabled
+            # Validar campos permitidos por plan SOLO si es prestador
+            if perfil.es_prestador and perfil.plan:
+                # Usar la instancia del plan que ya se asignó a perfil.plan
+                if isinstance(perfil.plan.fields_enabled, list):
+                    allowed_fields = perfil.plan.fields_enabled
                     # Filtrar solo campos permitidos
                     perfil_data = {k: v for k, v in perfil_data.items() 
                                  if k in allowed_fields or k in ['categoria', 'rubro']}
+            # Si no es prestador, permitir todos los campos sin restricciones
             
             # Aplicar cambios al perfil
             for field, value in perfil_data.items():
@@ -140,6 +160,77 @@ def planes_view(request):
     queryset = Plan.objects.filter(is_active=True).order_by('order', 'id')
     serializer = PlanSerializer(queryset, many=True)
     return Response(serializer.data)
+
+
+@api_view(['GET'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def planes_publicos_view(request):
+    """Lista de planes disponibles para la página de pricing (sin auth)."""
+    queryset = Plan.objects.filter(is_active=True).order_by('order', 'id')
+    
+    # Serializador simplificado para pricing público
+    planes_data = []
+    for plan in queryset:
+        # Crear lista de características basada en los permisos
+        features = []
+        
+        if plan.puede_crear_servicios:
+            if plan.max_servicios:
+                features.append(f"Hasta {plan.max_servicios} servicios")
+            else:
+                features.append("Servicios ilimitados")
+        
+        if plan.puede_subir_media:
+            media_features = []
+            if plan.max_images:
+                media_features.append(f"{plan.max_images} fotos")
+            if plan.max_videos:
+                media_features.append(f"{plan.max_videos} videos")
+            if media_features:
+                features.append(" + ".join(media_features))
+            else:
+                features.append("Fotos y videos ilimitados")
+        
+        if plan.puede_recibir_resenas:
+            features.append("Recibir reseñas")
+        
+        if plan.puede_ver_estadisticas:
+            features.append("Estadísticas avanzadas")
+        
+        # Agregar campos habilitados de perfil
+        profile_features = []
+        if 'telefono' in plan.fields_enabled:
+            profile_features.append("mostrar teléfono")
+        if 'direccion' in plan.fields_enabled:
+            profile_features.append("mostrar dirección")
+        if 'sitio_web' in plan.fields_enabled:
+            profile_features.append("sitio web")
+        if 'descripcion' in plan.fields_enabled:
+            profile_features.append("descripción personalizada")
+        
+        if profile_features:
+            features.append("Perfil: " + ", ".join(profile_features))
+        
+        # Determinar si es el plan más popular (ej: el de mayor precio que no sea gratuito)
+        is_popular = plan.precio_mensual > 0 and not queryset.filter(
+            precio_mensual__gt=plan.precio_mensual, is_active=True
+        ).exists()
+        
+        planes_data.append({
+            'id': plan.id,
+            'code': plan.code,
+            'name': plan.name,
+            'price_text': plan.price_text,
+            'precio_mensual': float(plan.precio_mensual),
+            'is_free': plan.precio_mensual <= 0,
+            'is_popular': is_popular,
+            'features': features,
+            'button_text': 'Comenzar gratis' if plan.precio_mensual <= 0 else f'Suscribirse por ${plan.price_text}',
+            'description': f"Plan {plan.name.lower()} para prestadores de servicios"
+        })
+    
+    return Response(planes_data)
 
 
 @api_view(['POST'])
@@ -203,3 +294,60 @@ def google_login_view(request):
         })
     except Exception as e:
         return Response({"detail": "No se pudo verificar el token de Google", "error": str(e)}, status=400)
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def register_view(request):
+    """Vista para registro de usuarios sin autenticación"""
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        # Generar token JWT para el usuario recién registrado
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            }
+        }, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@authentication_classes([])
+@permission_classes([AllowAny])
+def login_view(request):
+    """Vista para login de usuarios sin autenticación"""
+    username = request.data.get('username')
+    password = request.data.get('password')
+    
+    if not username or not password:
+        return Response({"detail": "Se requiere nombre de usuario y contraseña"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    from django.contrib.auth import authenticate
+    user = authenticate(username=username, password=password)
+    
+    if user is not None:
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh),
+            'user': {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+            }
+        })
+    else:
+        return Response({"detail": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)

@@ -7,7 +7,8 @@ from django.db.models import Count, Avg
 from django.utils import timezone
 from datetime import timedelta
 
-from .models import Categoria, Rubro, Servicio, Prestador, MediaPrestador, Resena, VisualizacionPerfil
+from .models import Categoria, Rubro, Servicio, MediaPrestador, Resena, VisualizacionPerfil
+from apps.usuarios.models import Perfil
 from .serializers import (
     CategoriaSerializer, 
     RubroSerializer, 
@@ -50,7 +51,7 @@ class ServicioViewSet(viewsets.ModelViewSet):
     serializer_class = ServicioSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['rubro', 'categoria', 'activo']
+    filterset_fields = ['prestador__perfil__rubro', 'prestador__perfil__categoria', 'activo']
     search_fields = ['nombre', 'descripcion']
     
     def get_queryset(self):
@@ -170,11 +171,11 @@ class ServicioViewSet(viewsets.ModelViewSet):
             )
 
 class PrestadorViewSet(viewsets.ModelViewSet):
-    queryset = Prestador.objects.all()
+    queryset = Perfil.objects.filter(es_prestador=True)
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['ciudad', 'provincia']
-    search_fields = ['nombre_comercial', 'descripcion']
+    filterset_fields = ['ciudad', 'provincia', 'categoria', 'rubro']
+    search_fields = ['usuario__first_name', 'usuario__last_name', 'usuario__username', 'descripcion']
     
     def get_serializer_class(self):
         if self.action == 'list':
@@ -182,7 +183,17 @@ class PrestadorViewSet(viewsets.ModelViewSet):
         return PrestadorDetailSerializer
     
     def get_queryset(self):
-        queryset = Prestador.objects.all()
+        # Usar Perfil como base del queryset, solo prestadores activos
+        queryset = Perfil.objects.filter(es_prestador=True)
+        
+        # Filtrar solo usuarios activos con suscripción activa
+        from apps.suscripciones.models import Suscripcion
+        usuarios_con_suscripcion_activa = Suscripcion.objects.filter(
+            activa=True,
+            estado='approved'
+        ).values_list('usuario', flat=True)
+        
+        queryset = queryset.filter(usuario__in=usuarios_con_suscripcion_activa)
         
         # Filtrado por ubicación
         ciudad = self.request.query_params.get('ciudad', None)
@@ -200,25 +211,25 @@ class PrestadorViewSet(viewsets.ModelViewSet):
             
         rubro_id = self.request.query_params.get('rubro', None)
         if rubro_id:
-            queryset = queryset.filter(usuario__servicios_creados__rubro__id=rubro_id)
+            queryset = queryset.filter(rubro__id=rubro_id)
             
         categoria_id = self.request.query_params.get('categoria', None)
         if categoria_id:
-            queryset = queryset.filter(usuario__servicios_creados__categoria__id=categoria_id)
+            queryset = queryset.filter(categoria__id=categoria_id)
             
         return queryset
     
     @action(detail=True, methods=['get'])
     def resenas(self, request, pk=None):
-        prestador = self.get_object()
-        resenas = prestador.resenas.all()
+        perfil = self.get_object()
+        resenas = perfil.usuario.resenas_recibidas.all()
         serializer = ResenaSerializer(resenas, many=True)
         return Response(serializer.data)
     
     @action(detail=True, methods=['get'])
     def media(self, request, pk=None):
-        prestador = self.get_object()
-        media = prestador.media.all()
+        perfil = self.get_object()
+        media = perfil.usuario.media_prestador.all()
         serializer = MediaPrestadorSerializer(media, many=True)
         return Response(serializer.data)
     
@@ -227,12 +238,12 @@ class PrestadorViewSet(viewsets.ModelViewSet):
         response = super().retrieve(request, *args, **kwargs)
         
         # Registrar visualización
-        prestador = self.get_object()
-        self._registrar_visualizacion(prestador, request)
+        perfil = self.get_object()
+        self._registrar_visualizacion(perfil, request)
         
         return response
     
-    def _registrar_visualizacion(self, prestador, request):
+    def _registrar_visualizacion(self, perfil, request):
         """Registrar una visualización del perfil del prestador"""
         try:
             # Obtener IP del cliente
@@ -247,7 +258,7 @@ class PrestadorViewSet(viewsets.ModelViewSet):
             
             # Crear registro de visualización
             VisualizacionPerfil.objects.create(
-                prestador=prestador,
+                usuario=perfil.usuario,
                 ip_address=ip,
                 user_agent=user_agent
             )
@@ -283,30 +294,21 @@ def dashboard_prestador(request):
         return Response({'error': 'Usuario no es prestador'}, status=status.HTTP_403_FORBIDDEN)
     
     try:
-        # Obtener o crear el perfil de prestador
-        prestador, created = Prestador.objects.get_or_create(
-            usuario=user,
-            defaults={
-                'nombre_comercial': user.get_full_name() or user.username,
-                'direccion': user.perfil.direccion or '',
-                'ciudad': user.perfil.ciudad or '',
-                'provincia': user.perfil.provincia or '',
-                'telefono': user.perfil.telefono or '',
-            }
-        )
+        # Obtener el perfil del usuario
+        perfil = user.perfil
         
         # Obtener el plan del usuario
-        plan_obj = user.perfil.plan
+        plan_obj = perfil.plan
         
         # Estadísticas básicas
-        total_visualizaciones = VisualizacionPerfil.objects.filter(prestador=prestador).count()
+        total_visualizaciones = VisualizacionPerfil.objects.filter(usuario=user).count()
         visualizaciones_mes = VisualizacionPerfil.objects.filter(
-            prestador=prestador,
+            usuario=user,
             fecha__gte=timezone.now() - timedelta(days=30)
         ).count()
         
         # Reseñas
-        resenas_qs = Resena.objects.filter(prestador=prestador)
+        resenas_qs = Resena.objects.filter(usuario=user)
         total_resenas = resenas_qs.count()
         promedio_calificacion = resenas_qs.aggregate(Avg('calificacion'))['calificacion__avg'] or 0
         ultimas_resenas = resenas_qs.order_by('-fecha')[:5]
@@ -373,10 +375,10 @@ def dashboard_prestador(request):
             'limitaciones': limitaciones,
             'ultimas_resenas': resenas_data,
             'prestador': {
-                'id': prestador.id,
-                'nombre_comercial': prestador.nombre_comercial,
-                'ciudad': prestador.ciudad,
-                'provincia': prestador.provincia,
+                'id': perfil.id,
+                'nombre_comercial': user.get_full_name() or user.username,
+                'ciudad': perfil.ciudad,
+                'provincia': perfil.provincia,
             }
         })
         
@@ -396,9 +398,10 @@ def registrar_visualizacion(request):
             return Response({'error': 'prestador_id es requerido'}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
-            prestador = Prestador.objects.get(id=prestador_id)
-        except Prestador.DoesNotExist:
-            return Response({'error': 'Prestador no encontrado'}, status=status.HTTP_404_NOT_FOUND)
+            from django.contrib.auth.models import User
+            usuario = User.objects.get(id=prestador_id)
+        except User.DoesNotExist:
+            return Response({'error': 'Usuario no encontrado'}, status=status.HTTP_404_NOT_FOUND)
         
         # Obtener IP del cliente
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -414,7 +417,7 @@ def registrar_visualizacion(request):
         # para evitar spam de visualizaciones
         from datetime import timedelta
         visualizacion_reciente = VisualizacionPerfil.objects.filter(
-            prestador=prestador,
+            usuario=usuario,
             ip_address=ip,
             fecha__gte=timezone.now() - timedelta(minutes=5)
         ).exists()
@@ -422,7 +425,7 @@ def registrar_visualizacion(request):
         if not visualizacion_reciente:
             # Crear registro de visualización
             VisualizacionPerfil.objects.create(
-                prestador=prestador,
+                usuario=usuario,
                 ip_address=ip,
                 user_agent=user_agent
             )

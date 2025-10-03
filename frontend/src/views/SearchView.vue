@@ -1,14 +1,14 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+  <div class="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
     <!-- Hero Section con búsqueda -->
-    <section class="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white py-16">
+    <section class="relative bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white py-20">
       <div class="absolute inset-0 bg-black/10"></div>
       <div class="container-custom relative z-10">
         <div class="text-center mb-12">
-          <h1 class="text-4xl md:text-5xl font-display font-bold mb-4">
+          <h1 class="text-4xl md:text-6xl font-display font-bold mb-6 tracking-tight">
             Encuentra el profesional perfecto
           </h1>
-          <p class="text-xl text-blue-100 max-w-2xl mx-auto">
+          <p class="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto font-light">
             Conectamos clientes con prestadores de servicios confiables en tu zona
           </p>
         </div>
@@ -25,7 +25,7 @@
                 </label>
                 <input 
                   type="text" 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white/80" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white text-gray-900 placeholder-gray-500" 
                   id="location" 
                   v-model="filtros.ubicacion"
                   placeholder="Ciudad, provincia..."
@@ -39,7 +39,7 @@
                   Categoría
                 </label>
                 <select 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white/80 appearance-none" 
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white text-gray-900 appearance-none cursor-pointer" 
                   id="category"
                   v-model="filtros.categoria"
                 >
@@ -47,29 +47,32 @@
                     v-for="categoria in categorias" 
                     :key="categoria.id" 
                     :value="categoria.id"
+                    class="text-gray-900"
                   >
                     {{ categoria.nombre }}
                   </option>
                 </select>
               </div>
               
-              <!-- Servicio -->
+              <!-- Rubro -->
               <div class="space-y-2">
-                <label for="service" class="block text-sm font-semibold text-gray-700">
-                  <font-awesome-icon :icon="['fas', 'tools']" class="mr-2 text-blue-600" />
-                  Servicio
+                <label for="rubro" class="block text-sm font-semibold text-gray-700">
+                  <font-awesome-icon :icon="['fas', 'briefcase']" class="mr-2 text-blue-600" />
+                  Rubro
                 </label>
                 <select 
-                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white/80 appearance-none" 
-                  id="service"
-                  v-model="filtros.servicio"
+                  class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-white text-gray-900 appearance-none cursor-pointer disabled:bg-gray-100 disabled:cursor-not-allowed" 
+                  id="rubro"
+                  v-model="filtros.rubro"
+                  :disabled="!filtros.categoria"
                 >
                   <option 
-                    v-for="servicio in serviciosFiltrados" 
-                    :key="servicio.id" 
-                    :value="servicio.id"
+                    v-for="rubro in rubros" 
+                    :key="rubro.id" 
+                    :value="rubro.id"
+                    class="text-gray-900"
                   >
-                    {{ servicio.nombre }}
+                    {{ rubro.nombre }}
                   </option>
                 </select>
               </div>
@@ -123,7 +126,7 @@
         <!-- Resultados -->
         <template v-else>
           <!-- Header de resultados -->
-          <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+          <div class="search-results flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
               <h2 class="text-3xl font-display font-bold text-gray-900 mb-2">
                 {{ resultados.length ? `${paginacion.totalResultados} profesionales encontrados` : 'No se encontraron resultados' }}
@@ -169,30 +172,26 @@
           </div>
 
           <!-- Grid de resultados -->
-          <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div v-else class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div v-for="prestador in resultados" :key="prestador.id" class="group">
-              <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 h-full overflow-hidden">
-                <!-- Header de la tarjeta -->
-                <div class="p-6 pb-4">
-                  <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                      <h3 class="text-xl font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                        {{ prestador.nombre_comercial }}
-                      </h3>
-                      <div class="flex items-center text-gray-600 mb-3">
-                        <font-awesome-icon :icon="['fas', 'map-marker-alt']" class="mr-2 text-blue-500 text-sm" />
-                        <span class="text-sm">{{ prestador.ubicacion || 'Sin ubicación especificada' }}</span>
+              <router-link :to="`/prestador/${prestador.id}`" class="block h-full">
+                <div class="bg-white rounded-2xl border-2 border-gray-200 shadow-sm hover:shadow-2xl hover:border-blue-400 transition-all duration-300 hover:-translate-y-1 h-full overflow-hidden">
+                  <!-- Header de la tarjeta -->
+                  <div class="p-6 pb-4">
+                    <div class="flex items-start justify-between mb-4">
+                      <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                          {{ prestador.nombre_comercial }}
+                        </h3>
+                        <div v-if="prestador.ubicacion" class="flex items-center text-gray-600 mb-3">
+                          <font-awesome-icon :icon="['fas', 'map-marker-alt']" class="mr-2 text-blue-500 text-sm" />
+                          <span class="text-sm">{{ prestador.ubicacion }}</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <!-- Plan badge -->
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {{ prestador.plan_nombre }}
-                    </span>
-                  </div>
                   
                   <!-- Servicios -->
-                  <div class="mb-4">
+                  <div v-if="prestador.servicios !== undefined" class="mb-4">
                     <div v-if="prestador.servicios && prestador.servicios.length > 0" class="flex flex-wrap gap-2">
                       <span 
                         v-for="(servicio, index) in prestador.servicios.slice(0, 3)" 
@@ -214,36 +213,33 @@
                   </div>
                 </div>
                 
-                <!-- Footer de la tarjeta -->
-                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
-                  <div class="flex justify-between items-center">
-                    <!-- Calificación -->
-                    <div class="flex items-center">
-                      <div class="flex mr-2">
-                        <template v-for="n in 5" :key="n">
-                          <font-awesome-icon 
-                            :icon="['fas', 'star']" 
-                            :class="n <= Math.round(prestador.puntuacion || 0) ? 'text-yellow-400' : 'text-gray-300'" 
-                            class="text-sm"
-                          />
-                        </template>
+                  <!-- Footer de la tarjeta -->
+                  <div class="px-6 py-4 bg-gradient-to-br from-gray-50 to-blue-50 border-t border-gray-100">
+                    <div class="flex justify-between items-center">
+                      <!-- Calificación -->
+                      <div class="flex items-center">
+                        <div class="flex mr-2">
+                          <template v-for="n in 5" :key="n">
+                            <font-awesome-icon 
+                              :icon="['fas', 'star']" 
+                              :class="n <= Math.round(prestador.puntuacion || 0) ? 'text-yellow-400' : 'text-gray-300'" 
+                              class="text-sm"
+                            />
+                          </template>
+                        </div>
+                        <span class="text-sm font-medium text-gray-700">
+                          {{ prestador.puntuacion > 0 ? prestador.puntuacion.toFixed(1) : 'Nuevo' }}
+                        </span>
                       </div>
-                      <span class="text-sm text-gray-600">
-                        {{ prestador.puntuacion > 0 ? prestador.puntuacion.toFixed(1) : 'Sin calificaciones' }}
-                      </span>
+                      
+                      <!-- Indicador visual -->
+                      <div class="text-blue-600 group-hover:translate-x-1 transition-transform">
+                        <font-awesome-icon :icon="['fas', 'arrow-right']" class="text-lg" />
+                      </div>
                     </div>
-                    
-                    <!-- Botón de acción -->
-                    <router-link 
-                      :to="`/prestador/${prestador.id}`" 
-                      class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center"
-                    >
-                      Ver perfil
-                      <font-awesome-icon :icon="['fas', 'arrow-right']" class="ml-2 text-xs" />
-                    </router-link>
                   </div>
                 </div>
-              </div>
+              </router-link>
             </div>
           </div>
         </template>
@@ -293,44 +289,189 @@
 </template>
 
 <script setup>
-import { onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useSearchStore } from '../stores/searchStore';
+import { searchService, catalogService } from '../services/api';
+import { useScrollToTop } from '../composables/useScrollToTop';
 
 const route = useRoute();
 const router = useRouter();
-const searchStore = useSearchStore();
-const { 
-  resultados, 
-  filtros, 
-  paginacion, 
-  loading, 
-  error, 
-  categorias, 
-  serviciosFiltrados,
-  buscar, 
-  cambiarPagina,
-  cargarCategorias,
-  cargarServicios,
-  limpiarFiltros
-} = searchStore;
+const { scrollToTop, scrollToElement } = useScrollToTop();
+
+// Estado local del componente
+const resultados = ref([]);
+const loading = ref(false);
+const error = ref(null);
+
+const filtros = ref({
+  ubicacion: '',
+  categoria: '',
+  rubro: '',
+  ordenar: 'relevance'
+});
+
+const paginacion = ref({
+  pagina: 1,
+  totalPaginas: 1,
+  totalResultados: 0
+});
+
+const categorias = ref([
+  { id: '', nombre: 'Todas las categorías' }
+]);
+
+const rubros = ref([
+  { id: '', nombre: 'Todos los rubros' }
+]);
+
+// Watch para cargar rubros cuando cambie la categoría
+watch(() => filtros.value.categoria, (nuevaCategoria) => {
+  filtros.value.rubro = ''; // Reset rubro cuando cambia categoría
+  if (nuevaCategoria) {
+    cargarRubros(nuevaCategoria);
+  } else {
+    rubros.value = [{ id: '', nombre: 'Todos los rubros' }];
+  }
+});
+
+// Funciones para cargar datos del catálogo
+async function cargarCategorias() {
+  try {
+    const response = await catalogService.getCategorias();
+    // La API devuelve un objeto paginado con { count, results }
+    const categoriasData = response.data.results || response.data;
+    categorias.value = [
+      { id: '', nombre: 'Todas las categorías' },
+      ...categoriasData
+    ];
+    console.log('Categorías cargadas:', categorias.value);
+  } catch (err) {
+    console.error('Error cargando categorías:', err);
+  }
+}
+
+async function cargarRubros(categoriaId) {
+  try {
+    const response = await catalogService.getRubros(categoriaId);
+    // La API devuelve un objeto paginado con { count, results }
+    const rubrosData = response.data.results || response.data;
+    rubros.value = [
+      { id: '', nombre: 'Todos los rubros' },
+      ...rubrosData
+    ];
+    console.log('Rubros cargados para categoría', categoriaId, ':', rubros.value);
+  } catch (err) {
+    console.error('Error cargando rubros:', err);
+    rubros.value = [{ id: '', nombre: 'Todos los rubros' }];
+  }
+}
+
+// Función principal de búsqueda
+async function buscar(params = {}) {
+  loading.value = true;
+  error.value = null;
+  
+  // Actualizar filtros con los parámetros proporcionados
+  if (params.ubicacion !== undefined) filtros.value.ubicacion = params.ubicacion;
+  if (params.categoria !== undefined) filtros.value.categoria = params.categoria;
+  if (params.rubro !== undefined) filtros.value.rubro = params.rubro;
+  if (params.ordenar !== undefined) filtros.value.ordenar = params.ordenar;
+  if (params.pagina !== undefined) paginacion.value.pagina = params.pagina;
+  
+  try {
+    console.log('Realizando búsqueda con filtros:', filtros.value);
+    
+    const response = await searchService.buscar({
+      ...filtros.value,
+      page: paginacion.value.pagina
+    });
+    
+    console.log('Respuesta de la API:', response.data);
+    
+    // El PrestadorViewSet devuelve los datos directamente en response.data
+    resultados.value = response.data.results || response.data || [];
+    
+    console.log('Prestadores encontrados:', resultados.value.length);
+    
+    // Manejar paginación si está disponible
+    if (response.data.count !== undefined) {
+      paginacion.value = {
+        pagina: paginacion.value.pagina,
+        totalPaginas: Math.ceil(response.data.count / 20), // 20 por página según configuración del backend
+        totalResultados: response.data.count
+      };
+    } else {
+      // Si no hay paginación, asumir que todos los resultados están en la primera página
+      paginacion.value = {
+        pagina: 1,
+        totalPaginas: 1,
+        totalResultados: resultados.value.length
+      };
+    }
+    
+    console.log('Paginación:', paginacion.value);
+    
+    // Scroll suave a los resultados después de cargar (excepto en la carga inicial)
+    if (params.pagina && params.pagina > 1) {
+      // Si es cambio de página, scroll a los resultados
+      scrollToElement('.search-results', 100); // 100px de offset desde el top
+    } else if (Object.keys(params).length > 0) {
+      // Si es una nueva búsqueda, scroll al top
+      scrollToTop(200); // 200ms de delay para que se renderice el contenido
+    }
+    
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Error al realizar la búsqueda';
+    console.error('Error al buscar:', err);
+    console.error('Detalles del error:', err.response?.data);
+  } finally {
+    loading.value = false;
+  }
+}
+
+// Función para cambiar de página
+function cambiarPagina(pagina) {
+  if (pagina >= 1 && pagina <= paginacion.value.totalPaginas) {
+    buscar({ pagina });
+  }
+}
+
+// Función para limpiar filtros
+function limpiarFiltros() {
+  filtros.value = {
+    ubicacion: '',
+    categoria: '',
+    rubro: '',
+    ordenar: 'relevance'
+  };
+  paginacion.value.pagina = 1;
+  rubros.value = [{ id: '', nombre: 'Todos los rubros' }];
+  buscar(); // Realizar búsqueda con filtros limpios
+}
 
 // Manejar la búsqueda inicial y cambios en la URL
 onMounted(async () => {
+  console.log('Componente SearchView montado');
+  
   // Cargar datos iniciales
-  await Promise.all([
-    cargarCategorias(),
-    cargarServicios()
-  ]);
+  await cargarCategorias();
+  
+  console.log('Datos del catálogo cargados');
   
   // Sincronizar filtros con parámetros de URL
   const params = route.query;
   
   if (params.ubicacion) filtros.value.ubicacion = params.ubicacion;
-  if (params.categoria) filtros.value.categoria = params.categoria;
-  if (params.servicio) filtros.value.servicio = params.servicio;
+  if (params.categoria) {
+    filtros.value.categoria = params.categoria;
+    // Cargar rubros de la categoría seleccionada
+    await cargarRubros(params.categoria);
+  }
+  if (params.rubro) filtros.value.rubro = params.rubro;
   if (params.ordenar) filtros.value.ordenar = params.ordenar;
   if (params.pagina) paginacion.value.pagina = parseInt(params.pagina) || 1;
+  
+  console.log('Filtros iniciales:', filtros.value);
   
   // Realizar búsqueda inicial
   buscar();

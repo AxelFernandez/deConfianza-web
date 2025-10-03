@@ -5,9 +5,15 @@ from .models import Perfil, Plan, PROFILE_FIELD_CHOICES
 
 @admin.register(Perfil)
 class PerfilAdmin(admin.ModelAdmin):
-    list_display = ("usuario", "es_prestador", "plan", "onboarding_completed")
-    list_filter = ("es_prestador", "plan", "onboarding_completed")
+    list_display = ("usuario", "es_prestador", "get_plan_name", "onboarding_completed")
+    list_filter = ("es_prestador", "onboarding_completed")
     search_fields = ("usuario__username", "usuario__email", "ciudad", "provincia")
+    
+    def get_plan_name(self, obj):
+        """Mostrar el nombre del plan actual"""
+        plan = obj.plan
+        return plan.name if plan else 'Sin plan'
+    get_plan_name.short_description = 'Plan actual'
 
 
 class PlanAdminForm(forms.ModelForm):

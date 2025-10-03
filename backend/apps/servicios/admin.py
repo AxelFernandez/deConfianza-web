@@ -3,7 +3,6 @@ from .models import (
     Categoria,
     Rubro,
     Servicio,
-    Prestador,
     MediaPrestador,
     Resena,
     VisualizacionPerfil,
@@ -25,39 +24,44 @@ class RubroAdmin(admin.ModelAdmin):
 
 @admin.register(Servicio)
 class ServicioAdmin(admin.ModelAdmin):
-    list_display = ("id", "nombre", "prestador", "categoria", "rubro", "precio_base", "activo", "fecha_creacion")
-    list_filter = ("activo", "categoria", "rubro", "fecha_creacion")
+    list_display = ("id", "nombre", "prestador", "get_categoria", "get_rubro", "precio_base", "activo", "fecha_creacion")
+    list_filter = ("activo", "prestador__perfil__categoria", "prestador__perfil__rubro", "fecha_creacion")
     search_fields = ("nombre", "prestador__username", "descripcion")
+    
+    def get_categoria(self, obj):
+        """Obtener categoría del perfil del prestador"""
+        return obj.prestador.perfil.categoria.nombre if hasattr(obj.prestador, 'perfil') and obj.prestador.perfil.categoria else 'Sin categoría'
+    get_categoria.short_description = 'Categoría'
+    
+    def get_rubro(self, obj):
+        """Obtener rubro del perfil del prestador"""
+        return obj.prestador.perfil.rubro.nombre if hasattr(obj.prestador, 'perfil') and obj.prestador.perfil.rubro else 'Sin rubro'
+    get_rubro.short_description = 'Rubro'
 
 
-@admin.register(Prestador)
-class PrestadorAdmin(admin.ModelAdmin):
-    list_display = ("id", "nombre_comercial", "usuario", "ciudad", "provincia", "pais")
-    list_filter = ("ciudad", "provincia", "pais")
-    search_fields = ("nombre_comercial", "usuario__username", "usuario__email")
 
 
 @admin.register(MediaPrestador)
 class MediaPrestadorAdmin(admin.ModelAdmin):
-    list_display = ("id", "prestador", "tipo", "titulo", "fecha_subida")
+    list_display = ("id", "usuario", "tipo", "titulo", "fecha_subida")
     list_filter = ("tipo", "fecha_subida")
-    search_fields = ("titulo", "prestador__nombre_comercial")
+    search_fields = ("titulo", "usuario__username", "usuario__email")
 
 
 @admin.register(Resena)
 class ResenaAdmin(admin.ModelAdmin):
-    list_display = ("id", "prestador", "calificacion", "nombre", "fecha")
+    list_display = ("id", "usuario", "calificacion", "nombre", "fecha")
     list_filter = ("calificacion", "fecha")
-    search_fields = ("prestador__nombre_comercial", "nombre", "comentario")
+    search_fields = ("usuario__username", "usuario__email", "nombre", "comentario")
 
 
 
 
 @admin.register(VisualizacionPerfil)
 class VisualizacionPerfilAdmin(admin.ModelAdmin):
-    list_display = ("id", "prestador", "ip_address", "fecha")
-    list_filter = ("fecha", "prestador")
-    search_fields = ("prestador__nombre_comercial", "ip_address")
+    list_display = ("id", "usuario", "ip_address", "fecha")
+    list_filter = ("fecha", "usuario")
+    search_fields = ("usuario__username", "usuario__email", "ip_address")
     readonly_fields = ("fecha",)
 
 

@@ -1,508 +1,258 @@
 <template>
-  <div class="min-h-screen bg-neutral-50">
-    <!-- Header con breadcrumb -->
-    <header class="bg-white shadow-sm border-b border-neutral-200">
-      <div class="container-custom py-6">
-        <div class="flex items-center space-x-2 text-sm text-neutral-600 mb-2">
-          <router-link to="/prestador/dashboard" class="hover:text-primary-600">Dashboard</router-link>
-          <span>/</span>
-          <span class="text-neutral-900">Mi perfil</span>
-        </div>
-        <h1 class="text-2xl font-bold text-neutral-900">Mi perfil</h1>
-        <p class="text-neutral-600 mt-1">Gestiona tu información personal y configuración de perfil</p>
+  <PrestadorLayout 
+    title="Mi Perfil" 
+    subtitle="Gestiona tu información personal y profesional"
+    breadcrumb="Perfil"
+    :plan-name="dashboardData?.plan?.name"
+    :dashboard-data="dashboardData"
+    @logout="authStore.logout"
+  >
+    <div class="space-y-6">
+      <!-- Loading -->
+      <div v-if="loading" class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+        <font-awesome-icon :icon="['fas', 'spinner']" class="text-blue-600 text-4xl animate-spin mb-4" />
+        <p class="text-gray-600">Cargando perfil...</p>
       </div>
-    </header>
-    
-    <!-- Contenido principal -->
-    <div class="container-custom py-8">
-      <div class="grid md:grid-cols-4 gap-6">
-        <!-- Menú lateral -->
-        <div class="md:col-span-1">
-          <DashboardNavigation />
-        </div>
-        
-        <!-- Contenido -->
-        <div class="md:col-span-3">
-          <!-- Loading state -->
-          <div v-if="loading" class="bg-white rounded-lg shadow-sm border border-neutral-100 p-8">
-            <div class="flex items-center justify-center">
-              <font-awesome-icon :icon="['fas', 'spinner']" class="text-primary-600 text-2xl animate-spin mr-3" />
-              <span class="text-neutral-600">Cargando perfil...</span>
-            </div>
-          </div>
 
-          <!-- Información del plan actual -->
-          <div v-else-if="userProfile?.plan_info" class="bg-white rounded-lg shadow-sm border border-neutral-100 p-6 mb-6">
-            <div class="flex items-center justify-between mb-4">
-              <h2 class="text-lg font-semibold text-neutral-900">Tu plan actual</h2>
-              <router-link 
-                to="/prestador/dashboard" 
-                class="text-sm text-primary-600 hover:text-primary-800 font-medium"
+      <!-- Formulario -->
+      <form v-else @submit.prevent="saveProfile" class="space-y-6">
+        <!-- Info Personal -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div class="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+              <div>
+                <h2 class="text-xl font-bold text-gray-900">Información Personal</h2>
+                <p class="text-sm text-gray-600 mt-1">Datos básicos de tu perfil</p>
+              </div>
+              <button 
+                v-if="!isEditing"
+                type="button"
+                @click="startEdit"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
-                Ver dashboard
-              </router-link>
-            </div>
-            
-            <div class="flex items-center bg-primary-50 border border-primary-200 rounded-lg p-4">
-              <div class="mr-4">
-                <div class="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600">
-                  <font-awesome-icon :icon="['fas', 'crown']" />
-                </div>
-              </div>
-              <div class="flex-1">
-                <h3 class="font-semibold text-neutral-900">{{ userProfile.plan_info.name }}</h3>
-                <p class="text-sm text-neutral-600 mb-2">
-                  {{ userProfile.plan_info.fields_enabled?.length || 0 }} campos habilitados, 
-                  {{ userProfile.plan_info.max_images }} imágenes, 
-                  {{ userProfile.plan_info.max_videos }} videos
-                </p>
-                
-                <!-- Permisos del plan -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                  <div class="flex items-center">
-                    <font-awesome-icon 
-                      :icon="['fas', userProfile.plan_info.puede_crear_servicios ? 'check' : 'times']" 
-                      :class="userProfile.plan_info.puede_crear_servicios ? 'text-green-500' : 'text-red-500'"
-                      class="mr-1"
-                    />
-                    Servicios
-                  </div>
-                  <div class="flex items-center">
-                    <font-awesome-icon 
-                      :icon="['fas', userProfile.plan_info.puede_recibir_resenas ? 'check' : 'times']" 
-                      :class="userProfile.plan_info.puede_recibir_resenas ? 'text-green-500' : 'text-red-500'"
-                      class="mr-1"
-                    />
-                    Reseñas
-                  </div>
-                  <div class="flex items-center">
-                    <font-awesome-icon 
-                      :icon="['fas', userProfile.plan_info.puede_subir_media ? 'check' : 'times']" 
-                      :class="userProfile.plan_info.puede_subir_media ? 'text-green-500' : 'text-red-500'"
-                      class="mr-1"
-                    />
-                    Media
-                  </div>
-                  <div class="flex items-center">
-                    <font-awesome-icon 
-                      :icon="['fas', userProfile.plan_info.puede_ver_estadisticas ? 'check' : 'times']" 
-                      :class="userProfile.plan_info.puede_ver_estadisticas ? 'text-green-500' : 'text-red-500'"
-                      class="mr-1"
-                    />
-                    Estadísticas
-                  </div>
-                </div>
-              </div>
-              <div class="text-right">
-                <p class="font-semibold text-neutral-900">{{ userProfile.plan_info.price_text }}</p>
-                <p class="text-xs text-neutral-500" v-if="userProfile.plan_info.precio_mensual > 0">Mensual</p>
+                <font-awesome-icon :icon="['fas', 'edit']" class="mr-2" />
+                Editar
+              </button>
+              <div v-else class="flex space-x-2">
+                <button 
+                  type="button"
+                  @click="cancelEdit"
+                  class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  :disabled="saving"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:bg-gray-400"
+                >
+                  <font-awesome-icon v-if="saving" :icon="['fas', 'spinner']" class="animate-spin mr-2" />
+                  {{ saving ? 'Guardando...' : 'Guardar' }}
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Formulario de edición de perfil -->
-          <div v-if="!loading" class="bg-white rounded-lg shadow-sm border border-neutral-100 overflow-hidden">
-            <!-- Header del formulario -->
-            <div class="bg-gradient-to-r from-primary-50 to-blue-50 border-b border-primary-100 p-6">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h2 class="text-xl font-semibold text-neutral-900 mb-1">Información personal</h2>
-                  <p class="text-sm text-neutral-600">Gestiona tu información de contacto y ubicación</p>
+          <div class="p-6 space-y-6">
+            <!-- Datos de cuenta -->
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div class="flex items-center">
+                  <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <font-awesome-icon :icon="['fas', 'user']" class="text-blue-600" />
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-600">Usuario</p>
+                    <p class="font-semibold text-gray-900">{{ authStore.user?.username }}</p>
+                  </div>
                 </div>
-                <div class="flex space-x-2">
-                  <button 
-                    v-if="isEditing"
-                    @click="cancelEdit"
-                    class="text-sm text-neutral-600 hover:text-neutral-800 px-4 py-2 border border-neutral-300 rounded-lg transition-colors hover:bg-neutral-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button 
-                    v-if="!isEditing"
-                    @click="startEdit"
-                    class="text-sm text-primary-600 hover:text-primary-800 font-medium px-4 py-2 border border-primary-300 rounded-lg transition-colors hover:bg-primary-50"
-                  >
-                    <font-awesome-icon :icon="['fas', 'edit']" class="mr-2" />
-                    Editar perfil
-                  </button>
-                  <button 
-                    v-else
-                    @click="saveProfile"
-                    :disabled="saving"
-                    class="text-sm bg-primary-600 hover:bg-primary-700 text-white font-medium px-5 py-2 rounded-lg transition-colors disabled:bg-neutral-400"
-                  >
-                    <font-awesome-icon v-if="saving" :icon="['fas', 'spinner']" class="animate-spin mr-2" />
-                    {{ saving ? 'Guardando...' : 'Guardar cambios' }}
-                  </button>
+              </div>
+
+              <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <div class="flex items-center">
+                  <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                    <font-awesome-icon :icon="['fas', 'envelope']" class="text-green-600" />
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-600">Email</p>
+                    <p class="font-semibold text-gray-900">{{ authStore.user?.email }}</p>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <!-- Contenido del formulario -->
-            <div class="p-6">
 
-            <form @submit.prevent="saveProfile" class="space-y-8">
-              
-              <!-- Información de cuenta (siempre visible) -->
+            <!-- Campos editables -->
+            <div class="grid md:grid-cols-2 gap-6">
+              <!-- Teléfono -->
               <div>
-                <h3 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center">
-                  <font-awesome-icon :icon="['fas', 'user-circle']" class="mr-3 text-primary-600" />
-                  Información de cuenta
-                </h3>
-                <div class="grid md:grid-cols-2 gap-4">
-                  <!-- Nombre -->
-                  <div class="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
-                    <div class="flex items-center">
-                      <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center mr-4">
-                        <font-awesome-icon :icon="['fas', 'user']" class="text-primary-600" />
-                      </div>
-                      <div class="flex-1">
-                        <h4 class="font-medium text-neutral-900">Nombre de usuario</h4>
-                        <p class="text-sm text-neutral-600 mt-1">
-                          {{ authStore.fullName || authStore.user?.email || 'Sin nombre' }}
-                        </p>
-                        <p class="text-xs text-neutral-500 mt-1">Nombre que verán tus clientes</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- Email -->
-                  <div class="bg-neutral-50 rounded-lg p-4 border border-neutral-200">
-                    <div class="flex items-center">
-                      <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                        <font-awesome-icon :icon="['fas', 'envelope']" class="text-blue-600" />
-                      </div>
-                      <div class="flex-1">
-                        <h4 class="font-medium text-neutral-900">Email</h4>
-                        <p class="text-sm text-neutral-600 mt-1">{{ authStore.user?.email || 'Sin email' }}</p>
-                        <p class="text-xs text-neutral-500 mt-1">Email de la cuenta</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Teléfono
+                  <span v-if="!isFieldEnabled('telefono')" class="text-orange-600 ml-1">🔒</span>
+                </label>
+                <input
+                  v-model="formData.telefono"
+                  type="tel"
+                  :disabled="!isEditing || !isFieldEnabled('telefono')"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  placeholder="Ej: +54 261 1234567"
+                />
               </div>
 
-              <!-- Información de contacto -->
+              <!-- Ciudad -->
               <div>
-                <h3 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center">
-                  <font-awesome-icon :icon="['fas', 'phone']" class="mr-3 text-primary-600" />
-                  Información de contacto
-                </h3>
-                
-                <!-- Teléfono -->
-                <PermissionWrapper 
-                  :has-permission="isFieldEnabled('telefono')"
-                  title="Teléfono no disponible"
-                  message="La visualización de teléfono no está incluida en tu plan actual"
-                  icon="phone"
-                  @upgrade="handleUpgrade"
-                >
-                  <div class="bg-white rounded-lg border border-neutral-200 p-4 mb-4">
-                    <div class="flex items-center justify-between">
-                      <div class="flex items-center">
-                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                          <font-awesome-icon :icon="['fas', 'phone']" class="text-green-600" />
-                        </div>
-                        <div>
-                          <h4 class="font-medium text-neutral-900">Teléfono de contacto</h4>
-                          <p v-if="!isEditing" class="text-sm text-neutral-600 mt-1">
-                            {{ formData.telefono || 'No especificado' }}
-                          </p>
-                          <input 
-                            v-else
-                            v-model="formData.telefono"
-                            type="tel"
-                            class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent mt-2"
-                            placeholder="+54 11 1234-5678"
-                          />
-                        </div>
-                      </div>
-                      <div class="text-right">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          <font-awesome-icon :icon="['fas', 'eye']" class="mr-1" />
-                          Visible para clientes
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </PermissionWrapper>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Ciudad
+                  <span v-if="!isFieldEnabled('ciudad')" class="text-orange-600 ml-1">🔒</span>
+                </label>
+                <input
+                  v-model="formData.ciudad"
+                  type="text"
+                  :disabled="!isEditing || !isFieldEnabled('ciudad')"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  placeholder="Ej: Mendoza"
+                />
               </div>
 
-              <!-- Información de ubicación -->
+              <!-- Provincia -->
               <div>
-                <h3 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center">
-                  <font-awesome-icon :icon="['fas', 'map-marker-alt']" class="mr-3 text-primary-600" />
-                  Ubicación del negocio
-                </h3>
-                <div class="grid md:grid-cols-2 gap-4">
-                  
-                  <!-- Dirección -->
-                  <PermissionWrapper 
-                    :has-permission="isFieldEnabled('direccion')"
-                    title="Dirección no disponible"
-                    message="La visualización de dirección no está incluida en tu plan actual"
-                    icon="map-marker-alt"
-                    @upgrade="handleUpgrade"
-                  >
-                    <div class="bg-white rounded-lg border border-neutral-200 p-4">
-                      <div class="flex items-start">
-                        <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                          <font-awesome-icon :icon="['fas', 'map-marker-alt']" class="text-red-600" />
-                        </div>
-                        <div class="flex-1">
-                          <h4 class="font-medium text-neutral-900 mb-2">Dirección</h4>
-                          <p v-if="!isEditing" class="text-sm text-neutral-600">
-                            {{ formData.direccion || 'No especificada' }}
-                          </p>
-                          <textarea 
-                            v-else
-                            v-model="formData.direccion"
-                            rows="2"
-                            class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            placeholder="Calle, número, piso, etc."
-                          ></textarea>
-                          <p class="text-xs text-neutral-500 mt-1">Dirección física del negocio</p>
-                        </div>
-                      </div>
-                    </div>
-                  </PermissionWrapper>
-                  
-                  <!-- Ciudad -->
-                  <PermissionWrapper 
-                    :has-permission="isFieldEnabled('ciudad')"
-                    title="Ciudad no disponible"
-                    message="La visualización de ciudad no está incluida en tu plan actual"
-                    icon="city"
-                    @upgrade="handleUpgrade"
-                  >
-                    <div class="bg-white rounded-lg border border-neutral-200 p-4">
-                      <div class="flex items-center">
-                        <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center mr-4">
-                          <font-awesome-icon :icon="['fas', 'city']" class="text-indigo-600" />
-                        </div>
-                        <div class="flex-1">
-                          <h4 class="font-medium text-neutral-900 mb-2">Ciudad</h4>
-                          <p v-if="!isEditing" class="text-sm text-neutral-600">
-                            {{ formData.ciudad || 'No especificada' }}
-                          </p>
-                          <input 
-                            v-else
-                            v-model="formData.ciudad"
-                            type="text"
-                            class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            placeholder="Ciudad"
-                          />
-                          <p class="text-xs text-neutral-500 mt-1">Ciudad donde operas</p>
-                        </div>
-                      </div>
-                    </div>
-                  </PermissionWrapper>
-                  
-                  <!-- Provincia -->
-                  <PermissionWrapper 
-                    :has-permission="isFieldEnabled('provincia')"
-                    title="Provincia no disponible"
-                    message="La visualización de provincia no está incluida en tu plan actual"
-                    icon="map"
-                    @upgrade="handleUpgrade"
-                  >
-                    <div class="bg-white rounded-lg border border-neutral-200 p-4">
-                      <div class="flex items-center">
-                        <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
-                          <font-awesome-icon :icon="['fas', 'map']" class="text-yellow-600" />
-                        </div>
-                        <div class="flex-1">
-                          <h4 class="font-medium text-neutral-900 mb-2">Provincia</h4>
-                          <p v-if="!isEditing" class="text-sm text-neutral-600">
-                            {{ formData.provincia || 'No especificada' }}
-                          </p>
-                          <input 
-                            v-else
-                            v-model="formData.provincia"
-                            type="text"
-                            class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            placeholder="Provincia"
-                          />
-                          <p class="text-xs text-neutral-500 mt-1">Provincia</p>
-                        </div>
-                      </div>
-                    </div>
-                  </PermissionWrapper>
-                  
-                  <!-- Sitio web -->
-                  <PermissionWrapper 
-                    :has-permission="isFieldEnabled('sitio_web')"
-                    title="Sitio web no disponible"
-                    message="La visualización de sitio web no está incluida en tu plan actual"
-                    icon="globe"
-                    @upgrade="handleUpgrade"
-                  >
-                    <div class="bg-white rounded-lg border border-neutral-200 p-4">
-                      <div class="flex items-center">
-                        <div class="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center mr-4">
-                          <font-awesome-icon :icon="['fas', 'globe']" class="text-teal-600" />
-                        </div>
-                        <div class="flex-1">
-                          <h4 class="font-medium text-neutral-900 mb-2">Sitio web</h4>
-                          <div v-if="!isEditing">
-                            <a 
-                              v-if="formData.sitio_web"
-                              :href="formData.sitio_web" 
-                              target="_blank" 
-                              class="text-sm text-primary-600 hover:text-primary-800"
-                            >
-                              {{ formData.sitio_web }}
-                            </a>
-                            <p v-else class="text-sm text-neutral-600">No especificado</p>
-                          </div>
-                          <input 
-                            v-else
-                            v-model="formData.sitio_web"
-                            type="url"
-                            class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                            placeholder="https://mi-sitio-web.com"
-                          />
-                          <p class="text-xs text-neutral-500 mt-1">Sitio web del negocio</p>
-                        </div>
-                      </div>
-                    </div>
-                  </PermissionWrapper>
-                </div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Provincia
+                  <span v-if="!isFieldEnabled('provincia')" class="text-orange-600 ml-1">🔒</span>
+                </label>
+                <input
+                  v-model="formData.provincia"
+                  type="text"
+                  :disabled="!isEditing || !isFieldEnabled('provincia')"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  placeholder="Ej: Mendoza"
+                />
+              </div>
+
+              <!-- Dirección -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Dirección
+                  <span v-if="!isFieldEnabled('direccion')" class="text-orange-600 ml-1">🔒</span>
+                </label>
+                <input
+                  v-model="formData.direccion"
+                  type="text"
+                  :disabled="!isEditing || !isFieldEnabled('direccion')"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  placeholder="Ej: Calle 123"
+                />
+              </div>
+
+              <!-- Sitio web -->
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Sitio Web
+                  <span v-if="!isFieldEnabled('sitio_web')" class="text-orange-600 ml-1">🔒</span>
+                </label>
+                <input
+                  v-model="formData.sitio_web"
+                  type="url"
+                  :disabled="!isEditing || !isFieldEnabled('sitio_web')"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  placeholder="https://tusitio.com"
+                />
               </div>
 
               <!-- Descripción -->
-              <PermissionWrapper 
-                :has-permission="isFieldEnabled('descripcion')"
-                title="Descripción no disponible"
-                message="La visualización de descripción no está incluida en tu plan actual"
-                icon="file-text"
-                @upgrade="handleUpgrade"
-              >
-                <div class="bg-white rounded-lg border border-neutral-200 p-4">
-                  <div class="flex items-start">
-                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mr-4">
-                      <font-awesome-icon :icon="['fas', 'file-text']" class="text-gray-600" />
-                    </div>
-                    <div class="flex-1">
-                      <h4 class="font-medium text-neutral-900 mb-2">Descripción del negocio</h4>
-                      <p v-if="!isEditing" class="text-sm text-neutral-600 leading-relaxed">
-                        {{ formData.descripcion || 'Sin descripción' }}
-                      </p>
-                      <textarea 
-                        v-else
-                        v-model="formData.descripcion"
-                        rows="4"
-                        class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        placeholder="Describe tu negocio, servicios y experiencia..."
-                      ></textarea>
-                      <p class="text-xs text-neutral-500 mt-1">Describe tu negocio y servicios</p>
-                    </div>
-                  </div>
-                </div>
-              </PermissionWrapper>
-
-              <!-- Categorías y rubros -->
-              <div>
-                <h3 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center">
-                  <font-awesome-icon :icon="['fas', 'tags']" class="mr-3 text-primary-600" />
-                  Categorización
-                </h3>
-                <div class="grid md:grid-cols-2 gap-4">
-                  
-                  <!-- Categoría -->
-                  <div class="bg-white rounded-lg border border-neutral-200 p-4">
-                    <div class="flex items-center">
-                      <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
-                        <font-awesome-icon :icon="['fas', 'tag']" class="text-purple-600" />
-                      </div>
-                      <div class="flex-1">
-                        <h4 class="font-medium text-neutral-900 mb-2">Categoría</h4>
-                        <p v-if="!isEditing" class="text-sm text-neutral-600">
-                          {{ userProfile?.categoria_nombre || 'No especificada' }}
-                        </p>
-                        <select 
-                          v-else
-                          v-model="formData.categoria"
-                          @change="onCategoriaChange"
-                          class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                        >
-                          <option value="">Selecciona una categoría</option>
-                          <option 
-                            v-for="categoria in categorias" 
-                            :key="categoria.id" 
-                            :value="categoria.id"
-                          >
-                            {{ categoria.nombre }}
-                          </option>
-                        </select>
-                        <p class="text-xs text-neutral-500 mt-1">Categoría del servicio</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Rubro -->
-                  <div class="bg-white rounded-lg border border-neutral-200 p-4">
-                    <div class="flex items-center">
-                      <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mr-4">
-                        <font-awesome-icon :icon="['fas', 'briefcase']" class="text-orange-600" />
-                      </div>
-                      <div class="flex-1">
-                        <h4 class="font-medium text-neutral-900 mb-2">Rubro</h4>
-                        <p v-if="!isEditing" class="text-sm text-neutral-600">
-                          {{ userProfile?.rubro_nombre || 'No especificado' }}
-                        </p>
-                        <select 
-                          v-else
-                          v-model="formData.rubro"
-                          class="w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                          :disabled="!formData.categoria"
-                        >
-                          <option value="">
-                            {{ !formData.categoria ? 'Primero selecciona una categoría' : 'Selecciona un rubro' }}
-                          </option>
-                          <option 
-                            v-for="rubro in rubrosFiltered" 
-                            :key="rubro.id" 
-                            :value="rubro.id"
-                          >
-                            {{ rubro.nombre }}
-                          </option>
-                        </select>
-                        <p class="text-xs text-neutral-500 mt-1">Rubro específico</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Descripción
+                  <span v-if="!isFieldEnabled('descripcion')" class="text-orange-600 ml-1">🔒</span>
+                </label>
+                <textarea
+                  v-model="formData.descripcion"
+                  :disabled="!isEditing || !isFieldEnabled('descripcion')"
+                  rows="4"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                  placeholder="Cuéntanos sobre tu negocio..."
+                ></textarea>
               </div>
-            </form>
+            </div>
+
+            <!-- Categoría y Rubro -->
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+                <select
+                  v-model="formData.categoria"
+                  :disabled="!isEditing"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                >
+                  <option value="">Selecciona una categoría</option>
+                  <option v-for="cat in categorias" v-if="cat && cat.id" :key="cat.id" :value="cat.id">
+                    {{ cat.nombre }}
+                  </option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Rubro</label>
+                <select
+                  v-model="formData.rubro"
+                  :disabled="!isEditing || !formData.categoria"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                >
+                  <option value="">Selecciona un rubro</option>
+                  <option v-for="rub in rubros" v-if="rub && rub.id" :key="rub.id" :value="rub.id">
+                    {{ rub.nombre }}
+                  </option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+
+        <!-- Campos bloqueados -->
+        <div v-if="blockedFields.length" class="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-xl p-6 border-2 border-dashed border-orange-300">
+          <div class="flex items-start">
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+              <font-awesome-icon :icon="['fas', 'lock']" class="text-orange-600 text-xl" />
+            </div>
+            <div class="flex-1">
+              <h3 class="font-bold text-gray-900 mb-2">Campos Bloqueados por tu Plan</h3>
+              <p class="text-sm text-gray-700 mb-3">
+                Los siguientes campos no están disponibles en tu plan actual:
+              </p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span v-for="field in blockedFields" :key="field" class="px-3 py-1 bg-white rounded-full text-sm font-medium text-gray-700 border border-orange-200">
+                  🔒 {{ field }}
+                </span>
+              </div>
+              <router-link 
+                to="/planes"
+                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+              >
+                <font-awesome-icon :icon="['fas', 'arrow-up']" class="mr-2" />
+                Mejorar Plan para Desbloquear
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
-  </div>
+  </PrestadorLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useAuthStore } from '../../stores/authStore';
-import apiClient from '../../services/api';
-import DashboardNavigation from '../../components/DashboardNavigation.vue';
-import PermissionWrapper from '../../components/PermissionWrapper.vue';
+import { authService, catalogService, misServiciosService } from '../../services/api';
+import PrestadorLayout from '../../components/PrestadorLayout.vue';
 
 const authStore = useAuthStore();
 
-// Estado del componente
-const loading = ref(true);
-const isEditing = ref(false);
+const loading = ref(false);
 const saving = ref(false);
-
-// Datos
-const userProfile = ref(null);
+const isEditing = ref(false);
+const dashboardData = ref(null);
 const categorias = ref([]);
 const rubros = ref([]);
 
-// Datos del formulario
 const formData = ref({
   telefono: '',
   direccion: '',
@@ -510,138 +260,126 @@ const formData = ref({
   provincia: '',
   sitio_web: '',
   descripcion: '',
-  categoria: '',
-  rubro: ''
+  categoria: null,
+  rubro: null
 });
 
-// Datos originales para cancelar edición
 const originalData = ref({});
 
-// Computed para rubros filtrados por categoría
-const rubrosFiltered = computed(() => {
-  if (!formData.value.categoria) return [];
-  return rubros.value.filter(rubro => rubro.categoria === parseInt(formData.value.categoria));
-});
-
-// Función para verificar si un campo está habilitado en el plan
 const isFieldEnabled = (fieldName) => {
-  if (!userProfile.value?.plan_info?.fields_enabled) return false;
-  return userProfile.value.plan_info.fields_enabled.includes(fieldName);
+  const fieldsEnabled = dashboardData.value?.plan?.fields_enabled || [];
+  return fieldsEnabled.includes(fieldName);
 };
 
-// Cargar datos del perfil
-const loadProfile = async () => {
+const blockedFields = computed(() => {
+  const allFields = {
+    telefono: 'Teléfono',
+    direccion: 'Dirección',
+    ciudad: 'Ciudad',
+    provincia: 'Provincia',
+    sitio_web: 'Sitio Web',
+    descripcion: 'Descripción'
+  };
+  
+  return Object.entries(allFields)
+    .filter(([key]) => !isFieldEnabled(key))
+    .map(([, value]) => value);
+});
+
+async function loadDashboard() {
   try {
-    loading.value = true;
-    await authStore.fetchUserProfile();
-    userProfile.value = authStore.user?.perfil;
-    
-    if (userProfile.value) {
-      formData.value = {
-        telefono: userProfile.value.telefono || '',
-        direccion: userProfile.value.direccion || '',
-        ciudad: userProfile.value.ciudad || '',
-        provincia: userProfile.value.provincia || '',
-        sitio_web: userProfile.value.sitio_web || '',
-        descripcion: userProfile.value.descripcion || '',
-        categoria: userProfile.value.categoria || '',
-        rubro: userProfile.value.rubro || ''
-      };
-      
-      // Guardar datos originales
-      originalData.value = { ...formData.value };
-    }
+    const response = await misServiciosService.getDashboard();
+    dashboardData.value = response.data;
   } catch (error) {
-    console.error('Error cargando perfil:', error);
+    console.error('Error:', error);
+  }
+}
+
+async function loadProfile() {
+  loading.value = true;
+  try {
+    const response = await authService.getCurrentUser();
+    const perfil = response.data.perfil || {};
+    
+    formData.value = {
+      telefono: perfil.telefono || '',
+      direccion: perfil.direccion || '',
+      ciudad: perfil.ciudad || '',
+      provincia: perfil.provincia || '',
+      sitio_web: perfil.sitio_web || '',
+      descripcion: perfil.descripcion || '',
+      categoria: perfil.categoria || null,
+      rubro: perfil.rubro || null
+    };
+    
+    originalData.value = { ...formData.value };
+  } catch (error) {
+    console.error('Error:', error);
   } finally {
     loading.value = false;
   }
-};
+}
 
-// Cargar categorías y rubros
-const loadCategoriasRubros = async () => {
+async function loadCategorias() {
   try {
-    const { catalogService } = await import('../../services/api');
-    const [categoriasResponse, rubrosResponse] = await Promise.all([
-      catalogService.getCategorias(),
-      catalogService.getRubros()
-    ]);
-    
-    categorias.value = categoriasResponse.data.results || categoriasResponse.data;
-    rubros.value = rubrosResponse.data.results || rubrosResponse.data;
+    const response = await catalogService.getCategorias();
+    categorias.value = (response.data || []).filter(cat => cat && cat.id);
   } catch (error) {
-    console.error('Error cargando categorías y rubros:', error);
+    console.error('Error:', error);
   }
-};
+}
 
-// Manejar cambio de categoría
-const onCategoriaChange = () => {
-  formData.value.rubro = ''; // Limpiar rubro cuando cambia categoría
-};
-
-// Iniciar edición
-const startEdit = () => {
-  isEditing.value = true;
-  originalData.value = { ...formData.value };
-};
-
-// Cancelar edición
-const cancelEdit = () => {
-  isEditing.value = false;
-  formData.value = { ...originalData.value };
-};
-
-// Guardar perfil
-const saveProfile = async () => {
+async function loadRubros() {
+  if (!formData.value.categoria) {
+    rubros.value = [];
+    return;
+  }
+  
   try {
-    saving.value = true;
-    
-    const updateData = {
-      perfil: {
-        telefono: formData.value.telefono,
-        direccion: formData.value.direccion,
-        ciudad: formData.value.ciudad,
-        provincia: formData.value.provincia,
-        sitio_web: formData.value.sitio_web,
-        descripcion: formData.value.descripcion,
-        categoria: formData.value.categoria || null,
-        rubro: formData.value.rubro || null
-      }
-    };
-    
-    const { authService } = await import('../../services/api');
-    await authService.updateProfile(updateData);
-    await authStore.fetchUserProfile(); // Recargar datos
-    
-    isEditing.value = false;
-    userProfile.value = authStore.user?.perfil;
-    
-    // Mostrar mensaje de éxito
-    alert('Perfil actualizado exitosamente');
-    
+    const response = await catalogService.getRubros(formData.value.categoria);
+    rubros.value = (response.data || []).filter(rubro => rubro && rubro.id);
   } catch (error) {
-    console.error('Error guardando perfil:', error);
-    if (error.response?.data) {
-      alert('Error al guardar: ' + JSON.stringify(error.response.data));
-    } else {
-      alert('Error al guardar el perfil. Inténtalo de nuevo.');
-    }
+    console.error('Error:', error);
+  }
+}
+
+watch(() => formData.value.categoria, () => {
+  formData.value.rubro = null;
+  loadRubros();
+});
+
+function startEdit() {
+  isEditing.value = true;
+}
+
+function cancelEdit() {
+  formData.value = { ...originalData.value };
+  isEditing.value = false;
+}
+
+async function saveProfile() {
+  saving.value = true;
+  try {
+    await authService.updateProfile({
+      perfil: formData.value
+    });
+    
+    originalData.value = { ...formData.value };
+    isEditing.value = false;
+    await authStore.fetchUserProfile();
+    
+    alert('Perfil actualizado correctamente');
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Error al guardar el perfil');
   } finally {
     saving.value = false;
   }
-};
-
-// Función para manejar upgrade de plan
-const handleUpgrade = () => {
-  alert('Funcionalidad de upgrade de plan próximamente disponible');
-};
+}
 
 onMounted(() => {
+  loadDashboard();
   loadProfile();
-  loadCategoriasRubros();
+  loadCategorias();
 });
 </script>
-
-<style scoped>
-/* Todos los estilos están en las clases de Tailwind */
-</style>

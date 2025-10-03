@@ -31,6 +31,15 @@
           >
             Buscar Servicios
           </router-link>
+
+          <router-link 
+            v-if="!isLandingOnlyMode"
+            to="/planes" 
+            class="text-neutral-600 hover:text-primary-500 font-medium transition-colors"
+            active-class="text-primary-600"
+          >
+            Planes
+          </router-link>
           
           <div v-if="!isLandingOnlyMode" class="flex items-center space-x-4">
             <!-- Usuario no autenticado -->
@@ -124,6 +133,16 @@
             active-class="text-primary-600"
           >
             Buscar Servicios
+          </router-link>
+
+          <router-link 
+            v-if="!isLandingOnlyMode"
+            to="/planes" 
+            @click="closeMobileMenu"
+            class="text-neutral-600 hover:text-primary-500 font-medium py-2 transition-colors"
+            active-class="text-primary-600"
+          >
+            Planes
           </router-link>
           
           <div v-if="!isLandingOnlyMode" class="flex flex-col space-y-3 pt-4 border-t border-neutral-200">

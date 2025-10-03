@@ -18,9 +18,9 @@ class PerfilSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Perfil
-        fields = ['telefono', 'direccion', 'ciudad', 'provincia', 'pais', 'es_prestador', 'plan', 
+        fields = ['telefono', 'direccion', 'ciudad', 'provincia', 'pais', 'es_prestador',
                   'onboarding_completed', 'categoria', 'rubro', 'categoria_nombre', 'rubro_nombre', 
-                  'plan_info', 'social_id', 'social_provider', 'is_google_user']
+                  'plan_info', 'social_id', 'social_provider', 'is_google_user', 'sitio_web', 'descripcion']
     
     def get_is_google_user(self, obj):
         return bool(obj.social_provider == 'google' and obj.social_id)
@@ -47,19 +47,22 @@ class UserSerializer(serializers.ModelSerializer):
         perfil_data = validated_data.pop('perfil', {})
         password = validated_data.pop('password', None)
         
-        # Validar campos de perfil habilitados por plan
+        # Validar campos de perfil habilitados por plan SOLO para prestadores
         if perfil_data:
             try:
                 perfil_instance = instance.perfil
-                plan_obj = getattr(perfil_instance, 'plan', None)
-                allowed_fields = []
-                if plan_obj and isinstance(plan_obj.fields_enabled, list):
-                    allowed_fields = plan_obj.fields_enabled
-                # Si no se encuentra plan en BD, permitir solo campos básicos por defecto
-                disallowed = [field_name for field_name in perfil_data.keys() if field_name not in allowed_fields]
-                if disallowed:
-                    # Opcional: podríamos ignorar en lugar de fallar. Elegimos fallar para feedback claro.
-                    raise ValidationError({f: 'Campo no habilitado por el plan actual' for f in disallowed})
+                # Solo aplicar restricciones si es prestador
+                if getattr(perfil_instance, 'es_prestador', False):
+                    plan_obj = getattr(perfil_instance, 'plan', None)
+                    allowed_fields = []
+                    if plan_obj and isinstance(plan_obj.fields_enabled, list):
+                        allowed_fields = plan_obj.fields_enabled
+                    # Si no se encuentra plan en BD, permitir solo campos básicos por defecto
+                    disallowed = [field_name for field_name in perfil_data.keys() if field_name not in allowed_fields]
+                    if disallowed:
+                        # Opcional: podríamos ignorar en lugar de fallar. Elegimos fallar para feedback claro.
+                        raise ValidationError({f: 'Campo no habilitado por el plan actual' for f in disallowed})
+                # Si no es prestador, permitir todos los campos sin restricciones
             except Exception:
                 # En caso de error inesperado, no bloquear actualización de usuario, pero no aplicar perfil
                 pass

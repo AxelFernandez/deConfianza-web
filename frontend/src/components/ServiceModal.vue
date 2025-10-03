@@ -67,42 +67,17 @@
             <p class="text-xs text-neutral-500 mt-1">Puedes dejar este campo vacío si prefieres cotizar por consulta</p>
           </div>
           
-          <!-- Categoría -->
-          <div>
-            <label for="categoria" class="block text-sm font-medium text-neutral-700 mb-2">
-              Categoría *
-            </label>
-            <select
-              id="categoria"
-              v-model="form.categoria"
-              required
-              @change="onCategoriaChange"
-              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            >
-              <option value="">Selecciona una categoría</option>
-              <option v-for="categoria in categorias" :key="categoria.id" :value="categoria.id">
-                {{ categoria.nombre }}
-              </option>
-            </select>
-          </div>
-          
-          <!-- Rubro -->
-          <div>
-            <label for="rubro" class="block text-sm font-medium text-neutral-700 mb-2">
-              Rubro *
-            </label>
-            <select
-              id="rubro"
-              v-model="form.rubro"
-              required
-              :disabled="!form.categoria"
-              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:bg-neutral-100 disabled:cursor-not-allowed"
-            >
-              <option value="">Selecciona un rubro</option>
-              <option v-for="rubro in rubros" :key="rubro.id" :value="rubro.id">
-                {{ rubro.nombre }}
-              </option>
-            </select>
+          <!-- Nota sobre categoría/rubro -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-start">
+              <font-awesome-icon :icon="['fas', 'info-circle']" class="text-blue-500 mt-0.5 mr-3" />
+              <div>
+                <h4 class="text-sm font-medium text-blue-800 mb-1">Categoría y rubro</h4>
+                <p class="text-sm text-blue-700">
+                  Los servicios heredan automáticamente la categoría y rubro configurados en tu perfil de prestador.
+                </p>
+              </div>
+            </div>
           </div>
           
           <!-- Estado -->
@@ -143,8 +118,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue';
-import { catalogService, misServiciosService } from '../services/api';
+import { ref, watch, computed } from 'vue';
+import { misServiciosService } from '../services/api';
 
 const props = defineProps({
   show: {
@@ -164,49 +139,14 @@ const form = ref({
   nombre: '',
   descripcion: '',
   precio_base: '',
-  categoria: '',
-  rubro: '',
   activo: true
 });
 
 // Estado de la aplicación
 const loading = ref(false);
-const categorias = ref([]);
-const rubros = ref([]);
 
 // Computed
 const isEditing = computed(() => !!props.servicio);
-
-// Cargar categorías
-async function loadCategorias() {
-  try {
-    const response = await catalogService.getCategorias();
-    categorias.value = response.data;
-  } catch (error) {
-    console.error('Error cargando categorías:', error);
-  }
-}
-
-// Cargar rubros por categoría
-async function loadRubros(categoriaId) {
-  if (!categoriaId) {
-    rubros.value = [];
-    return;
-  }
-  
-  try {
-    const response = await catalogService.getRubros({ categoria: categoriaId });
-    rubros.value = response.data;
-  } catch (error) {
-    console.error('Error cargando rubros:', error);
-  }
-}
-
-// Event handlers
-function onCategoriaChange() {
-  form.value.rubro = '';
-  loadRubros(form.value.categoria);
-}
 
 function closeModal() {
   emit('close');
@@ -246,8 +186,6 @@ watch(() => props.show, (newValue) => {
       nombre: '',
       descripcion: '',
       precio_base: '',
-      categoria: '',
-      rubro: '',
       activo: true
     };
     
@@ -257,20 +195,9 @@ watch(() => props.show, (newValue) => {
         nombre: props.servicio.nombre || '',
         descripcion: props.servicio.descripcion || '',
         precio_base: props.servicio.precio_base || '',
-        categoria: props.servicio.categoria || '',
-        rubro: props.servicio.rubro || '',
         activo: props.servicio.activo !== false
       };
-      
-      // Cargar rubros si ya hay una categoría seleccionada
-      if (props.servicio.categoria) {
-        loadRubros(props.servicio.categoria);
-      }
     }
   }
-});
-
-onMounted(() => {
-  loadCategorias();
 });
 </script>

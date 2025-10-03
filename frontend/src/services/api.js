@@ -132,7 +132,8 @@ export const catalogService = {
   getCategorias() {
     return apiClient.get('/servicios/categorias/');
   },
-  getRubros(params = {}) {
+  getRubros(categoriaId = null) {
+    const params = categoriaId ? { categoria: categoriaId } : {};
     return apiClient.get('/servicios/rubros/', { params });
   },
   getServicios(params = {}) {

@@ -25,15 +25,17 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const response = await authService.login(credentials);
-      token.value = response.data.token;
+      // El backend devuelve access y refresh tokens
+      token.value = response.data.access;
       localStorage.setItem('token', token.value);
+      localStorage.setItem('refreshToken', response.data.refresh);
       
       // Cargar datos del usuario
       await fetchUserProfile();
       
       return true;
     } catch (err) {
-      error.value = err.response?.data?.message || 'Error al iniciar sesión';
+      error.value = err.response?.data?.detail || err.response?.data?.message || 'Error al iniciar sesión';
       console.error('Error al iniciar sesión:', err);
       return false;
     } finally {
@@ -76,8 +78,10 @@ export const useAuthStore = defineStore('auth', () => {
     
     try {
       const response = await authService.register(userData);
-      token.value = response.data.token;
+      // El backend devuelve access y refresh tokens
+      token.value = response.data.access;
       localStorage.setItem('token', token.value);
+      localStorage.setItem('refreshToken', response.data.refresh);
       
       // Cargar datos del usuario
       await fetchUserProfile();
