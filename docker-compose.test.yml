@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   db-test:
@@ -11,6 +11,11 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-deconfianza_test}
     ports:
       - "${DB_PORT:-5434}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-deconfianza_test}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     networks:
       - deconfianza_test_network
 
@@ -23,7 +28,8 @@ services:
     ports:
       - "${BACKEND_PORT:-8002}:8000"
     depends_on:
-      - db-test
+      db-test:
+        condition: service_healthy
     environment:
       - DJANGO_DEBUG=${DJANGO_DEBUG}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
