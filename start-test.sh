@@ -45,7 +45,7 @@ docker-compose -f docker-compose.test.yml down
 
 # Iniciar servicios de pruebas
 echo "Iniciando servicios de pruebas..."
-docker-compose -f docker-compose.test.yml up -d
+docker-compose -f docker-compose.test.yml up -d --build
 
 # Reconectar Nginx Proxy Manager a la red de test
 if [ ! -z "$NPM_CONTAINER" ]; then

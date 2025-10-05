@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
       'deconfianza.com.ar',
       'www.deconfianza.com.ar'
     ],
+    hmr: false, // Deshabilitar HMR en entorno de test
     watch: {
       usePolling: true
     }
