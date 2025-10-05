@@ -57,7 +57,8 @@ services:
       dockerfile: Dockerfile.test
       args:
         - API_URL=${API_URL}
-        - LANDING_ONLY_MODE=${LANDING_ONLY_MODE:-true}
+        - LANDING_ONLY_MODE=${LANDING_ONLY_MODE:-false}
+        - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -67,7 +68,7 @@ services:
       - backend-test
     environment:
       - VITE_API_URL=${API_URL}
-      - VITE_LANDING_ONLY_MODE=${LANDING_ONLY_MODE:-true}
+      - VITE_LANDING_ONLY_MODE=${LANDING_ONLY_MODE:-false}
       - VITE_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     command: npm run dev -- --host 0.0.0.0
     networks:

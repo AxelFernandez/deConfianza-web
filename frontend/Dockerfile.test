@@ -9,10 +9,13 @@ RUN npm install
 COPY . .
 
 # Variables de entorno para testing
-ENV VITE_API_URL=https://test.deconfianza.com.ar/api
+ARG API_URL
+ENV VITE_API_URL=$API_URL
 ENV VITE_NODE_ENV=test
-ARG LANDING_ONLY_MODE=true
+ARG LANDING_ONLY_MODE=false
 ENV VITE_LANDING_ONLY_MODE=$LANDING_ONLY_MODE
+ARG GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
 
 # Puerto para testing
 EXPOSE 5173
