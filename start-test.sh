@@ -5,6 +5,17 @@
 echo "Iniciando entorno de pruebas de DeConfianza"
 echo "=============================================="
 
+# Verificar si se pasó el flag --no-cache
+NO_CACHE_FLAG=""
+if [ "$1" == "--no-cache" ]; then
+    echo "Modo: Rebuild completo sin caché"
+    NO_CACHE_FLAG="--no-cache"
+else
+    echo "Modo: Build normal (usa caché si está disponible)"
+    echo "Usa './start-test.sh --no-cache' para forzar rebuild completo"
+fi
+echo ""
+
 # Verificar que Docker está instalado
 if ! command -v docker &> /dev/null; then
     echo "Error: Docker no está instalado. Por favor, instálalo primero."
@@ -45,7 +56,12 @@ docker-compose -f docker-compose.test.yml down
 
 # Iniciar servicios de pruebas
 echo "Iniciando servicios de pruebas..."
-docker-compose -f docker-compose.test.yml up -d --build
+if [ ! -z "$NO_CACHE_FLAG" ]; then
+    docker-compose -f docker-compose.test.yml build $NO_CACHE_FLAG
+    docker-compose -f docker-compose.test.yml up -d
+else
+    docker-compose -f docker-compose.test.yml up -d --build
+fi
 
 # Reconectar Nginx Proxy Manager a la red de test
 if [ ! -z "$NPM_CONTAINER" ]; then
