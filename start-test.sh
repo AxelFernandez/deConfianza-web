@@ -33,11 +33,25 @@ docker network create deconfianza_prod_network 2>/dev/null || true
 
 # Detener servicios existentes de pruebas si están corriendo
 echo "Deteniendo servicios existentes de pruebas..."
+
+# Desconectar Nginx Proxy Manager de la red de test si está conectado
+NPM_CONTAINER=$(docker ps -q -f name=nginx-proxy-manager)
+if [ ! -z "$NPM_CONTAINER" ]; then
+    echo "Desconectando Nginx Proxy Manager de la red de test..."
+    docker network disconnect deconfianza-test_deconfianza_test_network $NPM_CONTAINER 2>/dev/null || true
+fi
+
 docker-compose -f docker-compose.test.yml down
 
 # Iniciar servicios de pruebas
 echo "Iniciando servicios de pruebas..."
 docker-compose -f docker-compose.test.yml up -d
+
+# Reconectar Nginx Proxy Manager a la red de test
+if [ ! -z "$NPM_CONTAINER" ]; then
+    echo "Reconectando Nginx Proxy Manager a la red de test..."
+    docker network connect deconfianza-test_deconfianza_test_network $NPM_CONTAINER 2>/dev/null || true
+fi
 
 # Mostrar información
 echo ""
