@@ -1,6 +1,6 @@
-# Planes de Suscripción para Test
+# Datos de Test: Planes, Categorías y Rubros
 
-Este documento describe los planes de suscripción configurados para el entorno de test y cómo crearlos.
+Este documento describe los datos de test (planes, categorías y rubros) configurados para el entorno de test y cómo crearlos.
 
 ## Planes Configurados
 
@@ -39,9 +39,34 @@ Este documento describe los planes de suscripción configurados para el entorno 
   - ✅ Tiene acceso a estadísticas
   - **Servicios:** Hasta 10 servicios
 
-## Cómo Crear los Planes
+## Categorías y Rubros Configurados
 
-### Opción 1: Usando el script (Recomendado)
+Se han configurado **10 categorías** con sus respectivos rubros:
+
+1. **Oficios** (10 rubros): Albañilería, Plomería, Electricidad, Carpintería, Pintura, Herrería, Jardinería, Gasista, Techista, Vidriero
+2. **Profesiones** (10 rubros): Abogacía, Contabilidad, Arquitectura, Ingeniería, Medicina, Odontología, Psicología, Veterinaria, Nutrición, Kinesiología
+3. **Servicios del Hogar** (7 rubros): Limpieza, Lavandería, Mudanzas, Fumigación, Cerrajería, Tapicería, Cortinados
+4. **Tecnología** (7 rubros): Desarrollo Web, Diseño Gráfico, Reparación de PC, Redes y Sistemas, Fotografía, Video y Edición, Marketing Digital
+5. **Gastronomía** (5 rubros): Catering, Repostería, Cocina a domicilio, Bartender, Parrillero
+6. **Belleza y Estética** (6 rubros): Peluquería, Manicura, Maquillaje, Barbería, Depilación, Spa y Masajes
+7. **Educación** (6 rubros): Clases Particulares, Idiomas, Música, Arte, Deportes, Yoga y Pilates
+8. **Eventos** (5 rubros): Organización de Eventos, DJ, Animación, Decoración, Sonido e Iluminación
+9. **Transporte** (6 rubros): Remis y Taxi, Fletes, Mensajería, Mecánica, Gomería, Lavado de Autos
+10. **Mascotas** (5 rubros): Veterinaria, Peluquería Canina, Paseador de Perros, Adiestramiento, Guardería
+
+**Total: 67 rubros**
+
+## Cómo Crear los Datos
+
+### Opción 1: Inicializar todo (Recomendado)
+
+```bash
+# En tu servidor de test - Crea planes, categorías y rubros
+cd ~/deconfianza-test
+./inicializar-datos-test.sh
+```
+
+### Opción 2: Crear solo planes
 
 ```bash
 # En tu servidor de test
@@ -49,14 +74,25 @@ cd ~/deconfianza-test
 ./crear-planes-test.sh
 ```
 
-### Opción 2: Comando de Django directo
+### Opción 3: Crear solo categorías y rubros
 
 ```bash
-# Ejecutar el comando dentro del contenedor
-docker exec deconfianza-test_backend-test_1 python manage.py crear_planes_test
+# En tu servidor de test
+cd ~/deconfianza-test
+docker exec deconfianza-test_backend-test_1 python manage.py crear_rubros_test
 ```
 
-### Opción 3: Desde el shell de Django
+### Opción 4: Comandos de Django directos
+
+```bash
+# Crear planes
+docker exec deconfianza-test_backend-test_1 python manage.py crear_planes_test
+
+# Crear categorías y rubros
+docker exec deconfianza-test_backend-test_1 python manage.py crear_rubros_test
+```
+
+### Opción 5: Desde el shell de Django
 
 ```bash
 # Acceder al shell de Django
@@ -65,16 +101,19 @@ docker exec -it deconfianza-test_backend-test_1 python manage.py shell
 # Ejecutar:
 from django.core.management import call_command
 call_command('crear_planes_test')
+call_command('crear_rubros_test')
 ```
 
-## Verificar los Planes
+## Verificar los Datos
 
-Puedes verificar que los planes se crearon correctamente de varias formas:
+Puedes verificar que los datos se crearon correctamente de varias formas:
 
 ### 1. Desde el Admin de Django
 
 ```
 https://test.deconfianza.com.ar/admin/usuarios/plan/
+https://test.deconfianza.com.ar/admin/servicios/categoria/
+https://test.deconfianza.com.ar/admin/servicios/rubro/
 ```
 
 ### 2. Desde el Shell de Django
@@ -85,10 +124,17 @@ docker exec -it deconfianza-test_backend-test_1 python manage.py shell
 
 ```python
 from apps.usuarios.models import Plan
+from apps.servicios.models import Categoria, Rubro
 
 # Ver todos los planes
 for plan in Plan.objects.all():
     print(f"{plan.name}: ${plan.precio_mensual} - {plan.code}")
+
+# Ver todas las categorías con sus rubros
+for cat in Categoria.objects.all():
+    print(f"\n{cat.nombre}: {cat.rubros.count()} rubros")
+    for rubro in cat.rubros.all():
+        print(f"  - {rubro.nombre}")
 ```
 
 ### 3. Desde la API

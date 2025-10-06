@@ -18,7 +18,7 @@ class Command(BaseCommand):
                 'name': 'Gratis',
                 'price_text': 'Gratis',
                 'precio_mensual': 0.00,
-                'fields_enabled': ['direccion'],  # Solo dirección
+                'fields_enabled': ['direccion','ciudad','provincia'],
                 'max_images': 0,
                 'max_videos': 0,
                 'puede_crear_servicios': True,
