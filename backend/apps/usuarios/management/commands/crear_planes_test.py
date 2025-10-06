@@ -34,7 +34,7 @@ class Command(BaseCommand):
                 'name': 'Estándar',
                 'price_text': '$2.999/mes',
                 'precio_mensual': 2999.00,
-                'fields_enabled': ['direccion', 'telefono'],  # Dirección y teléfono
+                'fields_enabled': ['direccion', 'telefono','ciudad','provincia'],  # Dirección y teléfono
                 'max_images': 3,
                 'max_videos': 0,
                 'puede_crear_servicios': True,

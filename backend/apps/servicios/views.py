@@ -23,6 +23,7 @@ from apps.usuarios.models import Plan
 class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
+    pagination_class = None  # Desactivar paginación para dropdowns
     
     @action(detail=True, methods=['get'])
     def rubros(self, request, pk=None):
@@ -35,6 +36,7 @@ class CategoriaViewSet(viewsets.ReadOnlyModelViewSet):
 class RubroViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Rubro.objects.all()
     serializer_class = RubroSerializer
+    pagination_class = None  # Desactivar paginación para dropdowns
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['categoria']
     
